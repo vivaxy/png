@@ -2,20 +2,43 @@
  * @since 2019-10-30 03:00
  * @author vivaxy
  */
-const CHUNK_TYPES = {
-  TYPE_IHDR: 0x49484452,
-  TYPE_IEND: 0x49454e44,
-  TYPE_IDAT: 0x49444154,
-  TYPE_PLTE: 0x504c5445,
-  TYPE_tRNS: 0x74524e53,
-  TYPE_gAMA: 0x67414d41,
-};
+import * as pako from 'pako';
+
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+type COLOR_TYPES = 0 | 2 | 3 | 4 | 6;
+const COLORTYPE_TO_BPP_MAP = {
+  0: 1,
+  2: 3,
+  3: 1,
+  4: 2,
+  6: 4,
+};
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
 
+  const metadata: {
+    width: number;
+    height: number;
+    depth: number;
+    colorType: COLOR_TYPES;
+    compression: number;
+    interlace: number;
+    filter: number;
+    palette: [number, number, number, number][];
+  } = {
+    width: 0,
+    height: 0,
+    depth: 0,
+    colorType: 0,
+    compression: 0,
+    interlace: 0,
+    filter: 0,
+    palette: [],
+  };
+
   // Helpers
+  let index = 0;
   function readUInt32BE() {
     return (
       (typedArray[index++] << 24) |
@@ -29,7 +52,14 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     return typedArray[index++];
   }
 
-  let index = 0;
+  function readChunkType() {
+    let name = '';
+    for (const end = index + 4; index < end; index++) {
+      name += String.fromCharCode(typedArray[index]);
+    }
+    return name;
+  }
+
   // 1. Signature
   for (; index < PNG_SIGNATURE.length; index++) {
     if (typedArray[index] !== PNG_SIGNATURE[index]) {
@@ -40,38 +70,104 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   // 2. Chunks
-  let hasIHDR = false;
-  let hasIEND = false;
-  const chunkHandlers = {
-    [CHUNK_TYPES.TYPE_IHDR]: handleIHDR,
-    [CHUNK_TYPES.TYPE_IDAT]: handleIDAT,
+  const chunkHandlers: { [key: string]: (l: number) => void } = {
+    IHDR: parseIHDR,
+    PLTE: parsePLTE,
+    IDAT: parseIDAT,
+    tRNS: parseTRNS,
   };
 
-  function handleIHDR(length: number) {
-    const width = readUInt32BE();
-    const height = readUInt32BE();
-    const depth = readUInt8();
+  function parseIHDR() {
+    metadata.width = readUInt32BE();
+    metadata.height = readUInt32BE();
+    metadata.depth = readUInt8();
     const colorType = readUInt8(); // bits: 1 palette, 2 color, 4 alpha
-    const compr = readUInt8();
-    const filter = readUInt8();
-    const interlace = readUInt8();
+    if (colorType in COLORTYPE_TO_BPP_MAP) {
+      throw new Error('Unsupported color type');
+    }
+    metadata.colorType = colorType as COLOR_TYPES;
+    metadata.compression = readUInt8();
+    metadata.filter = readUInt8();
+    metadata.interlace = readUInt8();
 
     parseChunkEnd();
   }
 
-  function handleIDAT() {}
+  function parsePLTE(length: number) {
+    for (let i = 0; i < length; i += 3) {
+      metadata.palette.push([
+        typedArray[index++],
+        typedArray[index++],
+        typedArray[index++],
+        0xff,
+      ]);
+    }
+
+    parseChunkEnd();
+  }
+
+  function parseTRNS(length: number) {
+    for (let i = 0; i < length; i++) {
+      metadata.palette[i][3] = typedArray[index];
+      index++;
+    }
+
+    parseChunkEnd();
+  }
+
+  function parseIDAT(length: number) {
+    const data = pako.inflate(typedArray.slice(index, index + length));
+    index += length;
+
+    const bpp = COLORTYPE_TO_BPP_MAP[metadata.colorType];
+
+    function getByteWidth(width: number, bpp: number, depth: number) {
+      let byteWidth = width * bpp;
+      if (depth !== 8) {
+        byteWidth = Math.ceil(byteWidth / (8 / depth));
+      }
+      return byteWidth;
+    }
+
+    const images = [
+      {
+        byteWidth: getByteWidth(metadata.width, bpp, metadata.depth),
+        height: metadata.height,
+        lineIndex: 0,
+      },
+    ];
+  }
 
   function parseChunkBegin() {
     const length = readUInt32BE();
-    const type = readUInt32BE();
+    const type = readChunkType();
+
+    console.log(
+      'type',
+      type,
+      'length',
+      length,
+      'data',
+      typedArray.slice(index, index + length),
+      'index',
+      index,
+    );
+
     if (chunkHandlers[type]) {
       return chunkHandlers[type](length);
     }
-    throw new Error('Unexpected chunk type: ' + type + ', index: ' + index);
+
+    const ancillary = Boolean(type.charCodeAt(0) & 0x20); // or critical
+    if (!ancillary) {
+      throw new Error('Unsupported critical chunk type ' + type);
+    }
+    // Skip chunk
+    index += length;
+    parseChunkEnd();
   }
 
   function parseChunkEnd() {
-    readUInt32BE();
+    index += 4;
     parseChunkBegin();
   }
 
