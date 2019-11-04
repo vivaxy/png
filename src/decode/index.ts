@@ -6,7 +6,7 @@ import * as pako from 'pako';
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 type COLOR_TYPES = 0 | 2 | 3 | 4 | 6;
-const COLORTYPE_TO_BPP_MAP = {
+const COLOR_TYPE_TO_CHANNEL = {
   0: 1,
   2: 3,
   3: 1,
@@ -82,7 +82,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     metadata.height = readUInt32BE();
     metadata.depth = readUInt8();
     const colorType = readUInt8(); // bits: 1 palette, 2 color, 4 alpha
-    if (colorType in COLORTYPE_TO_BPP_MAP) {
+    if (!(colorType in COLOR_TYPE_TO_CHANNEL)) {
       throw new Error('Unsupported color type');
     }
     metadata.colorType = colorType as COLOR_TYPES;
@@ -116,26 +116,33 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseIDAT(length: number) {
+    // inflate
     const data = pako.inflate(typedArray.slice(index, index + length));
     index += length;
 
-    const bpp = COLORTYPE_TO_BPP_MAP[metadata.colorType];
+    const scanlineWidth =
+      Math.ceil(
+        (metadata.width * COLOR_TYPE_TO_CHANNEL[metadata.colorType]) /
+          (8 / metadata.depth),
+      ) + 1;
 
-    function getByteWidth(width: number, bpp: number, depth: number) {
-      let byteWidth = width * bpp;
-      if (depth !== 8) {
-        byteWidth = Math.ceil(byteWidth / (8 / depth));
-      }
-      return byteWidth;
+    let i = 0;
+    while (i < data.length) {
+      const scanline = data.slice(i, i + scanlineWidth);
+      i += scanlineWidth;
+      console.log('scanline', scanline);
     }
 
-    const images = [
-      {
-        byteWidth: getByteWidth(metadata.width, bpp, metadata.depth),
-        height: metadata.height,
-        lineIndex: 0,
+    // unfilter
+    const filter = {
+      0(data: number) {
+        return data;
       },
-    ];
+    };
+    const type = data[0];
+    // return filter[type](data[1]);
+
+    console.log('metadata', metadata);
   }
 
   function parseChunkBegin() {
