@@ -150,11 +150,11 @@ const arrayBuffer = [
   -126,
 ];
 
-test.skip('decode', function() {
+test('decode', function() {
   const int8Array = new Int8Array(arrayBuffer);
 
-  expect(decode(int8Array.buffer)).toBe({
-    data: [],
+  expect(decode(int8Array.buffer)).toStrictEqual({
+    data: [255, 0, 0, 255, 0, 255, 0, 255, 0, 0, 255, 255, 255, 255, 255, 127],
     width: 2,
     height: 2,
   });

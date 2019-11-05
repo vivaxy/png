@@ -213,5 +213,9 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   parseChunkBegin();
 
-  return metadata;
+  return {
+    width: metadata.width,
+    height: metadata.height,
+    data: metadata.data,
+  };
 }
