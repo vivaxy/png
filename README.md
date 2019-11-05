@@ -15,6 +15,8 @@
 
 ```js
 import png from '@vivaxy/png';
+
+const { width, height, data } = png.decode(imageBuffer);
 ```
 
 #
