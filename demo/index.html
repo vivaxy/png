@@ -14,7 +14,7 @@
     <script src="../dist/index.js"></script>
     <script>
       const input = document.querySelector("input");
-      input.addEventListener("change", async function(e) {
+      input.addEventListener("input", async function(e) {
         const file = e.target.files[0];
         const arrayBuffer = await file.arrayBuffer();
         console.log(png.decode(arrayBuffer));

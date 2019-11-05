@@ -5,7 +5,7 @@
 import * as pako from 'pako';
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-type COLOR_TYPES = 0 | 2 | 3 | 4 | 6;
+type ColorTypes = 0 | 2 | 3 | 4 | 6;
 const COLOR_TYPE_TO_CHANNEL = {
   0: 1,
   2: 3,
@@ -13,6 +13,32 @@ const COLOR_TYPE_TO_CHANNEL = {
   4: 2,
   6: 4,
 };
+const FILTER_LENGTH = 1;
+type FilterTypes = 0 | 1 | 2 | 3 | 4;
+const unfilters: {
+  [filterType in FilterTypes]?: (data: Uint8Array) => Uint8Array;
+} = {
+  0(data: Uint8Array) {
+    return data;
+  },
+};
+
+function channelBuilder(unfilteredLine: Uint8Array, depth: number): number[] {
+  if (depth === 2) {
+    const channels = [];
+    for (let i = 0; i < unfilteredLine.length; i++) {
+      const uint8 = unfilteredLine[i];
+      channels.push(
+        (uint8 >> 6) & 3,
+        (uint8 >> 4) & 3,
+        (uint8 >> 2) & 3,
+        uint8 & 3,
+      );
+    }
+    return channels;
+  }
+  throw new Error('Unsupported depth: ' + depth);
+}
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
@@ -21,11 +47,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     width: number;
     height: number;
     depth: number;
-    colorType: COLOR_TYPES;
+    colorType: ColorTypes;
     compression: number;
     interlace: number;
     filter: number;
     palette: [number, number, number, number][];
+    data: number[];
   } = {
     width: 0,
     height: 0,
@@ -35,6 +62,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     interlace: 0,
     filter: 0,
     palette: [],
+    data: [],
   };
 
   // Helpers
@@ -83,9 +111,9 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     metadata.depth = readUInt8();
     const colorType = readUInt8(); // bits: 1 palette, 2 color, 4 alpha
     if (!(colorType in COLOR_TYPE_TO_CHANNEL)) {
-      throw new Error('Unsupported color type');
+      throw new Error('Unsupported color type: ' + colorType);
     }
-    metadata.colorType = colorType as COLOR_TYPES;
+    metadata.colorType = colorType as ColorTypes;
     metadata.compression = readUInt8();
     metadata.filter = readUInt8();
     metadata.interlace = readUInt8();
@@ -99,7 +127,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         typedArray[index++],
         typedArray[index++],
         typedArray[index++],
-        0xff,
+        0xff, // default to intransparent
       ]);
     }
 
@@ -120,45 +148,50 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     const data = pako.inflate(typedArray.slice(index, index + length));
     index += length;
 
+    // scanline
+    const channel = COLOR_TYPE_TO_CHANNEL[metadata.colorType];
     const scanlineWidth =
-      Math.ceil(
-        (metadata.width * COLOR_TYPE_TO_CHANNEL[metadata.colorType]) /
-          (8 / metadata.depth),
-      ) + 1;
+      Math.ceil((metadata.width * channel * metadata.depth) / 8) +
+      FILTER_LENGTH;
 
-    let i = 0;
-    while (i < data.length) {
-      const scanline = data.slice(i, i + scanlineWidth);
-      i += scanlineWidth;
-      console.log('scanline', scanline);
+    let rowIndex = 0;
+    while (rowIndex < data.length) {
+      const scanline = data.slice(rowIndex, rowIndex + scanlineWidth);
+      rowIndex += scanlineWidth;
+
+      // unfilter
+      const filterType = scanline[0] as FilterTypes;
+      if (!(filterType in unfilters)) {
+        throw new Error('Unsupported filter type: ' + filterType);
+      }
+      const unfilter = unfilters[filterType];
+      const unfilteredLine = unfilter!(scanline.slice(1));
+
+      // to channel
+      const channels = channelBuilder(unfilteredLine, metadata.depth);
+      let channelIndex = 0;
+
+      for (let pixelIndex = 0; pixelIndex < metadata.width; pixelIndex++) {
+        // to pixel
+        const pixel = channels.slice(
+          channelIndex,
+          channelIndex + COLOR_TYPE_TO_CHANNEL[metadata.colorType],
+        );
+        channelIndex += COLOR_TYPE_TO_CHANNEL[metadata.colorType];
+
+        // to imageData
+        if (metadata.colorType === 3) {
+          metadata.data = metadata.data.concat(metadata.palette[pixel[0]]);
+        } else {
+          throw new Error('Unsupported color type: ' + metadata.colorType);
+        }
+      }
     }
-
-    // unfilter
-    const filter = {
-      0(data: number) {
-        return data;
-      },
-    };
-    const type = data[0];
-    // return filter[type](data[1]);
-
-    console.log('metadata', metadata);
   }
 
   function parseChunkBegin() {
     const length = readUInt32BE();
     const type = readChunkType();
-
-    console.log(
-      'type',
-      type,
-      'length',
-      length,
-      'data',
-      typedArray.slice(index, index + length),
-      'index',
-      index,
-    );
 
     if (chunkHandlers[type]) {
       return chunkHandlers[type](length);
@@ -166,7 +199,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
     const ancillary = Boolean(type.charCodeAt(0) & 0x20); // or critical
     if (!ancillary) {
-      throw new Error('Unsupported critical chunk type ' + type);
+      throw new Error('Unsupported critical chunk type: ' + type);
     }
     // Skip chunk
     index += length;
@@ -179,4 +212,6 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   parseChunkBegin();
+
+  return metadata;
 }
