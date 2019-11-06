@@ -3,6 +3,7 @@
  * @author vivaxy
  */
 import * as pako from 'pako';
+import crc32 from '../helpers/crc32';
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
 type ColorTypes = 0 | 2 | 3 | 4 | 6;
@@ -98,14 +99,17 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   // 2. Chunks
-  const chunkHandlers: { [key: string]: (l: number) => void } = {
+  const chunkHandlers: {
+    [key: string]: (startIndex: number, length: number) => void;
+  } = {
     IHDR: parseIHDR,
     PLTE: parsePLTE,
     IDAT: parseIDAT,
+    IEND: parseIEND,
     tRNS: parseTRNS,
   };
 
-  function parseIHDR() {
+  function parseIHDR(startIndex: number, length: number) {
     metadata.width = readUInt32BE();
     metadata.height = readUInt32BE();
     metadata.depth = readUInt8();
@@ -118,10 +122,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     metadata.filter = readUInt8();
     metadata.interlace = readUInt8();
 
-    parseChunkEnd();
+    parseChunkEnd(startIndex, length);
   }
 
-  function parsePLTE(length: number) {
+  function parsePLTE(startIndex: number, length: number) {
     for (let i = 0; i < length; i += 3) {
       metadata.palette.push([
         typedArray[index++],
@@ -131,19 +135,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       ]);
     }
 
-    parseChunkEnd();
+    parseChunkEnd(startIndex, length);
   }
 
-  function parseTRNS(length: number) {
-    for (let i = 0; i < length; i++) {
-      metadata.palette[i][3] = typedArray[index];
-      index++;
-    }
-
-    parseChunkEnd();
-  }
-
-  function parseIDAT(length: number) {
+  function parseIDAT(startIndex: number, length: number) {
     // inflate
     const data = pako.inflate(typedArray.slice(index, index + length));
     index += length;
@@ -187,14 +182,31 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         }
       }
     }
+
+    parseChunkEnd(startIndex, length);
+  }
+
+  function parseIEND(startIndex: number, length: number) {
+    index += length;
+    parseChunkEnd(startIndex, length);
+  }
+
+  function parseTRNS(startIndex: number, length: number) {
+    for (let i = 0; i < length; i++) {
+      metadata.palette[i][3] = typedArray[index];
+      index++;
+    }
+
+    parseChunkEnd(startIndex, length);
   }
 
   function parseChunkBegin() {
+    const startIndex = index;
     const length = readUInt32BE();
     const type = readChunkType();
 
     if (chunkHandlers[type]) {
-      return chunkHandlers[type](length);
+      return chunkHandlers[type](startIndex, length);
     }
 
     const ancillary = Boolean(type.charCodeAt(0) & 0x20); // or critical
@@ -203,12 +215,25 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     }
     // Skip chunk
     index += length;
-    parseChunkEnd();
+    parseChunkEnd(startIndex, length);
   }
 
-  function parseChunkEnd() {
-    index += 4;
-    parseChunkBegin();
+  function parseChunkEnd(startIndex: number, length: number) {
+    const fileCrc32 = readUInt32BE();
+    const calculatedCrc32 = crc32(
+      typedArray.slice(startIndex + 4, startIndex + 8 + length),
+    );
+    if (fileCrc32 !== calculatedCrc32) {
+      throw new Error(
+        'Crc32 error: calculated ' +
+          calculatedCrc32 +
+          ', expected ' +
+          fileCrc32,
+      );
+    }
+    if (index < typedArray.length) {
+      parseChunkBegin();
+    }
   }
 
   parseChunkBegin();
