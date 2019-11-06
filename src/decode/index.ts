@@ -15,9 +15,11 @@ const COLOR_TYPE_TO_CHANNEL = {
   6: 4,
 };
 const FILTER_LENGTH = 1;
-type FilterTypes = 0 | 1 | 2 | 3 | 4;
-const unfilters: {
-  [filterType in FilterTypes]?: (data: Uint8Array) => Uint8Array;
+type FilterFunctionTypes = 0 | 1 | 2 | 3 | 4;
+const unfilterFunctions: {
+  [filterFunctionType in FilterFunctionTypes]?: (
+    data: Uint8Array,
+  ) => Uint8Array;
 } = {
   0(data: Uint8Array) {
     return data;
@@ -155,12 +157,14 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       rowIndex += scanlineWidth;
 
       // unfilter
-      const filterType = scanline[0] as FilterTypes;
-      if (!(filterType in unfilters)) {
-        throw new Error('Unsupported filter type: ' + filterType);
+      const filterFunctionType = scanline[0] as FilterFunctionTypes;
+      if (!(filterFunctionType in unfilterFunctions)) {
+        throw new Error(
+          'Unsupported filter function type: ' + filterFunctionType,
+        );
       }
-      const unfilter = unfilters[filterType];
-      const unfilteredLine = unfilter!(scanline.slice(1));
+      const unfilterFunction = unfilterFunctions[filterFunctionType];
+      const unfilteredLine = unfilterFunction!(scanline.slice(1));
 
       // to channel
       const channels = channelBuilder(unfilteredLine, metadata.depth);
