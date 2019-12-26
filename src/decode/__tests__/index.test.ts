@@ -3,6 +3,7 @@
  * @author vivaxy
  */
 import * as path from 'path';
+import * as assert from 'assert';
 import * as fse from 'fs-extra';
 import * as glob from 'fast-glob';
 
@@ -11,11 +12,11 @@ import decode from '..';
 const fixturesPath = path.join(__dirname, 'fixtures');
 
 test('decode', async function() {
-  // const testcaseNames = await glob('*', {
-  //   cwd: fixturesPath,
-  //   onlyDirectories: true,
-  // });
-  const testcaseNames = ['bit-depth-1'];
+  const testcaseNames = await glob('*', {
+    cwd: fixturesPath,
+    onlyDirectories: true,
+  });
+  // const testcaseNames = ['new'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
@@ -25,9 +26,25 @@ test('decode', async function() {
         testcaseName,
         'output.json',
       );
+      const actualOutputPath = path.join(
+        fixturesPath,
+        testcaseName,
+        'actual.json',
+      );
       const imageBinaryData = await fse.readFile(imagePath);
       const expectedOutputData = await fse.readJson(expectedOutputPath);
-      expect(decode(imageBinaryData)).toStrictEqual(expectedOutputData);
+      const decodedData = decode(imageBinaryData);
+      try {
+        assert.deepStrictEqual(decodedData, expectedOutputData);
+        await fse.remove(actualOutputPath);
+        expect(true).toBe(true);
+      } catch (e) {
+        await fse.outputFile(
+          actualOutputPath,
+          JSON.stringify(decodedData, null, 2),
+        );
+        expect(false).toBe(true);
+      }
     }),
   );
 });

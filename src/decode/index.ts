@@ -64,6 +64,15 @@ function channelBuilder(unfilteredLine: Uint8Array, depth: number): number[] {
         uint8 & 3,
       );
     }
+  } else if (depth === 4) {
+    for (let i = 0; i < unfilteredLine.length; i++) {
+      const uint8 = unfilteredLine[i];
+      channels.push((uint8 >> 4) & 15, uint8 & 15);
+    }
+  } else if (depth === 8) {
+    throw new Error('Unsupported depth: ' + depth);
+  } else if (depth === 16) {
+    throw new Error('Unsupported depth: ' + depth);
   } else {
     throw new Error('Unsupported depth: ' + depth);
   }
