@@ -247,7 +247,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   parseChunkBegin();
 
-  // decode all IDAT
+  // 3. Decode all IDAT
   // inflate
   const data = pako.inflate(idatUint8Array);
 
@@ -274,15 +274,17 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     let channelIndex = 0;
 
     for (let pixelIndex = 0; pixelIndex < metadata.width; pixelIndex++) {
+      const channelPerPixel = COLOR_TYPE_TO_CHANNEL[metadata.colorType];
       // to pixel
       const pixel = channels.slice(
         channelIndex,
-        channelIndex + COLOR_TYPE_TO_CHANNEL[metadata.colorType],
+        (channelIndex += channelPerPixel),
       );
-      channelIndex += COLOR_TYPE_TO_CHANNEL[metadata.colorType];
 
       // to imageData
-      if (metadata.colorType === COLOR_TYPES.PALETTE) {
+      if (metadata.colorType === COLOR_TYPES.TRUE_COLOR) {
+        metadata.data = metadata.data.concat(pixel.concat(255));
+      } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
         metadata.data = metadata.data.concat(metadata.palette[pixel[0]]);
       } else {
         throw new Error('Unsupported color type: ' + metadata.colorType);
