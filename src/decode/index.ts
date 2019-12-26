@@ -4,88 +4,16 @@
  */
 import * as pako from 'pako';
 import crc32 from '../helpers/crc32';
-
-const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-enum COLOR_TYPES {
-  GRAYSCALE = 0,
-  TRUE_COLOR = 2,
-  PALETTE = 3,
-  GRAYSCALE_WITH_APLHA = 4 & GRAYSCALE,
-  TRUE_COLOR_WITH_APLHA = 4 & TRUE_COLOR,
-}
-const COLOR_TYPE_TO_CHANNEL: {
-  [colorType in COLOR_TYPES]: number;
-} = {
-  [COLOR_TYPES.GRAYSCALE]: 1,
-  [COLOR_TYPES.TRUE_COLOR]: 3,
-  [COLOR_TYPES.PALETTE]: 1,
-  [COLOR_TYPES.GRAYSCALE_WITH_APLHA]: 2,
-  [COLOR_TYPES.TRUE_COLOR_WITH_APLHA]: 4,
-};
-const FILTER_LENGTH = 1;
-enum FILTER_TYPES {
-  NONE = 0,
-  SUB = 1,
-  UP = 2,
-  AVERAGE = 3,
-  PAETH = 4,
-}
-const unfilters: {
-  [filterType in FILTER_TYPES]?: (data: Uint8Array) => Uint8Array;
-} = {
-  [FILTER_TYPES.NONE](data: Uint8Array) {
-    return data;
-  },
-};
-
-function channelBuilder(unfilteredLine: Uint8Array, depth: number): number[] {
-  const channels = [];
-  if (depth === 1) {
-    for (let i = 0; i < unfilteredLine.length; i++) {
-      const uint8 = unfilteredLine[i];
-      channels.push(
-        (uint8 >> 7) & 1,
-        (uint8 >> 6) & 1,
-        (uint8 >> 5) & 1,
-        (uint8 >> 4) & 1,
-        (uint8 >> 3) & 1,
-        (uint8 >> 2) & 1,
-        (uint8 >> 1) & 1,
-        uint8 & 1,
-      );
-    }
-  } else if (depth === 2) {
-    for (let i = 0; i < unfilteredLine.length; i++) {
-      const uint8 = unfilteredLine[i];
-      channels.push(
-        (uint8 >> 6) & 3,
-        (uint8 >> 4) & 3,
-        (uint8 >> 2) & 3,
-        uint8 & 3,
-      );
-    }
-  } else if (depth === 4) {
-    for (let i = 0; i < unfilteredLine.length; i++) {
-      const uint8 = unfilteredLine[i];
-      channels.push((uint8 >> 4) & 15, uint8 & 15);
-    }
-  } else if (depth === 8) {
-    return Array.from(unfilteredLine);
-  } else if (depth === 16) {
-    throw new Error('Unsupported depth: ' + depth);
-  } else {
-    throw new Error('Unsupported depth: ' + depth);
-  }
-
-  return channels;
-}
-
-function concatUint8Array(a: Uint8Array, b: Uint8Array): Uint8Array {
-  const concated = new Uint8Array(a.length + b.length);
-  concated.set(a);
-  concated.set(b, a.length);
-  return concated;
-}
+import {
+  PNG_SIGNATURE,
+  COLOR_TYPES,
+  COLOR_TYPE_TO_CHANNEL,
+  FILTER_LENGTH,
+  FILTER_TYPES,
+  unfilters,
+  buildChannels,
+  concatUint8Array,
+} from './heplers';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
@@ -161,10 +89,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     metadata.height = readUInt32BE();
     metadata.depth = readUInt8();
     const colorType = readUInt8(); // bits: 1 palette, 2 color, 4 alpha
-    if (!(colorType in COLOR_TYPE_TO_CHANNEL)) {
+    if (!(colorType in COLOR_TYPES)) {
       throw new Error('Unsupported color type: ' + colorType);
     }
-    metadata.colorType = colorType as COLOR_TYPES;
+    metadata.colorType = colorType;
     metadata.compression = readUInt8();
     metadata.filter = readUInt8();
     metadata.interlace = readUInt8();
@@ -270,7 +198,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     const unfilteredLine = unfilter!(scanline.slice(1));
 
     // to channel
-    const channels = channelBuilder(unfilteredLine, metadata.depth);
+    const channels = buildChannels(unfilteredLine, metadata.depth);
     let channelIndex = 0;
 
     for (let pixelIndex = 0; pixelIndex < metadata.width; pixelIndex++) {
@@ -292,9 +220,5 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     }
   }
 
-  return {
-    width: metadata.width,
-    height: metadata.height,
-    data: metadata.data,
-  };
+  return metadata;
 }

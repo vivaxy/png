@@ -1,5 +1,11 @@
 {
-  "data": [0, 0, 0, 255],
   "width": 1,
-  "height": 1
+  "height": 1,
+  "depth": 1,
+  "colorType": 3,
+  "compression": 0,
+  "interlace": 0,
+  "filter": 0,
+  "palette": [[0, 0, 0, 255]],
+  "data": [0, 0, 0, 255]
 }
