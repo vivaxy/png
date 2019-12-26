@@ -214,6 +214,8 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         metadata.data = metadata.data.concat(pixel.concat(255));
       } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
         metadata.data = metadata.data.concat(metadata.palette[pixel[0]]);
+      } else if (metadata.colorType === COLOR_TYPES.TRUE_COLOR_WITH_APLHA) {
+        metadata.data = metadata.data.concat(pixel);
       } else {
         throw new Error('Unsupported color type: ' + metadata.colorType);
       }
