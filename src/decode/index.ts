@@ -70,7 +70,7 @@ function channelBuilder(unfilteredLine: Uint8Array, depth: number): number[] {
       channels.push((uint8 >> 4) & 15, uint8 & 15);
     }
   } else if (depth === 8) {
-    throw new Error('Unsupported depth: ' + depth);
+    return Array.from(unfilteredLine);
   } else if (depth === 16) {
     throw new Error('Unsupported depth: ' + depth);
   } else {

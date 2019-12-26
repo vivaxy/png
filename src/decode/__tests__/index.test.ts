@@ -16,7 +16,7 @@ test('decode', async function() {
     cwd: fixturesPath,
     onlyDirectories: true,
   });
-  // const testcaseNames = ['new'];
+  // const testcaseNames = ['bit-depth-8'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
