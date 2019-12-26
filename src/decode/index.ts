@@ -6,22 +6,34 @@ import * as pako from 'pako';
 import crc32 from '../helpers/crc32';
 
 const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-type ColorTypes = 0 | 2 | 3 | 4 | 6;
-const COLOR_TYPE_TO_CHANNEL = {
-  0: 1,
-  2: 3,
-  3: 1,
-  4: 2,
-  6: 4,
+enum COLOR_TYPES {
+  GRAYSCALE = 0,
+  TRUE_COLOR = 2,
+  PALETTE = 3,
+  GRAYSCALE_WITH_APLHA = 4 & GRAYSCALE,
+  TRUE_COLOR_WITH_APLHA = 4 & TRUE_COLOR,
+}
+const COLOR_TYPE_TO_CHANNEL: {
+  [colorType in COLOR_TYPES]: number;
+} = {
+  [COLOR_TYPES.GRAYSCALE]: 1,
+  [COLOR_TYPES.TRUE_COLOR]: 3,
+  [COLOR_TYPES.PALETTE]: 1,
+  [COLOR_TYPES.GRAYSCALE_WITH_APLHA]: 2,
+  [COLOR_TYPES.TRUE_COLOR_WITH_APLHA]: 4,
 };
 const FILTER_LENGTH = 1;
-type FilterFunctionTypes = 0 | 1 | 2 | 3 | 4;
-const unfilterFunctions: {
-  [filterFunctionType in FilterFunctionTypes]?: (
-    data: Uint8Array,
-  ) => Uint8Array;
+enum FILTER_TYPES {
+  NONE = 0,
+  SUB = 1,
+  UP = 2,
+  AVERAGE = 3,
+  PAETH = 4,
+}
+const unfilters: {
+  [filterType in FILTER_TYPES]?: (data: Uint8Array) => Uint8Array;
 } = {
-  0(data: Uint8Array) {
+  [FILTER_TYPES.NONE](data: Uint8Array) {
     return data;
   },
 };
@@ -50,7 +62,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     width: number;
     height: number;
     depth: number;
-    colorType: ColorTypes;
+    colorType: COLOR_TYPES;
     compression: number;
     interlace: number;
     filter: number;
@@ -119,7 +131,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     if (!(colorType in COLOR_TYPE_TO_CHANNEL)) {
       throw new Error('Unsupported color type: ' + colorType);
     }
-    metadata.colorType = colorType as ColorTypes;
+    metadata.colorType = colorType as COLOR_TYPES;
     metadata.compression = readUInt8();
     metadata.filter = readUInt8();
     metadata.interlace = readUInt8();
@@ -157,14 +169,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       rowIndex += scanlineWidth;
 
       // unfilter
-      const filterFunctionType = scanline[0] as FilterFunctionTypes;
-      if (!(filterFunctionType in unfilterFunctions)) {
-        throw new Error(
-          'Unsupported filter function type: ' + filterFunctionType,
-        );
+      const filterType = scanline[0] as FILTER_TYPES;
+      if (!(filterType in unfilters)) {
+        throw new Error('Unsupported filter type: ' + filterType);
       }
-      const unfilterFunction = unfilterFunctions[filterFunctionType];
-      const unfilteredLine = unfilterFunction!(scanline.slice(1));
+      const unfilter = unfilters[filterType];
+      const unfilteredLine = unfilter!(scanline.slice(1));
 
       // to channel
       const channels = channelBuilder(unfilteredLine, metadata.depth);
