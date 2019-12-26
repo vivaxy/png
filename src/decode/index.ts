@@ -39,8 +39,22 @@ const unfilters: {
 };
 
 function channelBuilder(unfilteredLine: Uint8Array, depth: number): number[] {
-  if (depth === 2) {
-    const channels = [];
+  const channels = [];
+  if (depth === 1) {
+    for (let i = 0; i < unfilteredLine.length; i++) {
+      const uint8 = unfilteredLine[i];
+      channels.push(
+        (uint8 >> 7) & 1,
+        (uint8 >> 6) & 1,
+        (uint8 >> 5) & 1,
+        (uint8 >> 4) & 1,
+        (uint8 >> 3) & 1,
+        (uint8 >> 2) & 1,
+        (uint8 >> 1) & 1,
+        uint8 & 1,
+      );
+    }
+  } else if (depth === 2) {
     for (let i = 0; i < unfilteredLine.length; i++) {
       const uint8 = unfilteredLine[i];
       channels.push(
@@ -50,13 +64,23 @@ function channelBuilder(unfilteredLine: Uint8Array, depth: number): number[] {
         uint8 & 3,
       );
     }
-    return channels;
+  } else {
+    throw new Error('Unsupported depth: ' + depth);
   }
-  throw new Error('Unsupported depth: ' + depth);
+
+  return channels;
+}
+
+function concatUint8Array(a: Uint8Array, b: Uint8Array): Uint8Array {
+  const concated = new Uint8Array(a.length + b.length);
+  concated.set(a);
+  concated.set(b, a.length);
+  return concated;
 }
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
+  let idatUint8Array = new Uint8Array([]);
 
   const metadata: {
     width: number;
@@ -153,50 +177,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseIDAT(startIndex: number, length: number) {
-    // inflate
-    const data = pako.inflate(typedArray.slice(index, index + length));
+    // save data, decode later
+    idatUint8Array = concatUint8Array(
+      idatUint8Array,
+      typedArray.slice(index, index + length),
+    );
     index += length;
-
-    // scanline
-    const channel = COLOR_TYPE_TO_CHANNEL[metadata.colorType];
-    const scanlineWidth =
-      Math.ceil((metadata.width * channel * metadata.depth) / 8) +
-      FILTER_LENGTH;
-
-    let rowIndex = 0;
-    while (rowIndex < data.length) {
-      const scanline = data.slice(rowIndex, rowIndex + scanlineWidth);
-      rowIndex += scanlineWidth;
-
-      // unfilter
-      const filterType = scanline[0] as FILTER_TYPES;
-      if (!(filterType in unfilters)) {
-        throw new Error('Unsupported filter type: ' + filterType);
-      }
-      const unfilter = unfilters[filterType];
-      const unfilteredLine = unfilter!(scanline.slice(1));
-
-      // to channel
-      const channels = channelBuilder(unfilteredLine, metadata.depth);
-      let channelIndex = 0;
-
-      for (let pixelIndex = 0; pixelIndex < metadata.width; pixelIndex++) {
-        // to pixel
-        const pixel = channels.slice(
-          channelIndex,
-          channelIndex + COLOR_TYPE_TO_CHANNEL[metadata.colorType],
-        );
-        channelIndex += COLOR_TYPE_TO_CHANNEL[metadata.colorType];
-
-        // to imageData
-        if (metadata.colorType === 3) {
-          metadata.data = metadata.data.concat(metadata.palette[pixel[0]]);
-        } else {
-          throw new Error('Unsupported color type: ' + metadata.colorType);
-        }
-      }
-    }
-
     parseChunkEnd(startIndex, length);
   }
 
@@ -251,6 +237,49 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   parseChunkBegin();
+
+  // decode all IDAT
+  // inflate
+  const data = pako.inflate(idatUint8Array);
+
+  // scanline
+  const channel = COLOR_TYPE_TO_CHANNEL[metadata.colorType];
+  const scanlineWidth =
+    Math.ceil((metadata.width * channel * metadata.depth) / 8) + FILTER_LENGTH;
+
+  let rowIndex = 0;
+  while (rowIndex < data.length) {
+    const scanline = data.slice(rowIndex, rowIndex + scanlineWidth);
+    rowIndex += scanlineWidth;
+
+    // unfilter
+    const filterType = scanline[0] as FILTER_TYPES;
+    if (!(filterType in unfilters)) {
+      throw new Error('Unsupported filter type: ' + filterType);
+    }
+    const unfilter = unfilters[filterType];
+    const unfilteredLine = unfilter!(scanline.slice(1));
+
+    // to channel
+    const channels = channelBuilder(unfilteredLine, metadata.depth);
+    let channelIndex = 0;
+
+    for (let pixelIndex = 0; pixelIndex < metadata.width; pixelIndex++) {
+      // to pixel
+      const pixel = channels.slice(
+        channelIndex,
+        channelIndex + COLOR_TYPE_TO_CHANNEL[metadata.colorType],
+      );
+      channelIndex += COLOR_TYPE_TO_CHANNEL[metadata.colorType];
+
+      // to imageData
+      if (metadata.colorType === COLOR_TYPES.PALETTE) {
+        metadata.data = metadata.data.concat(metadata.palette[pixel[0]]);
+      } else {
+        throw new Error('Unsupported color type: ' + metadata.colorType);
+      }
+    }
+  }
 
   return {
     width: metadata.width,
