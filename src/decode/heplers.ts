@@ -69,17 +69,6 @@ function buildChannels(unfilteredLine: Uint8Array, depth: number): number[] {
   return channels;
 }
 
-const ADAM7 = [
-  [1, 6, 4, 6, 2, 6, 4, 6],
-  [7, 7, 7, 7, 7, 7, 7, 7],
-  [5, 6, 5, 6, 5, 6, 5, 6],
-  [7, 7, 7, 7, 7, 7, 7, 7],
-  [3, 6, 4, 6, 3, 6, 4, 6],
-  [7, 7, 7, 7, 7, 7, 7, 7],
-  [5, 6, 5, 6, 5, 6, 5, 6],
-  [7, 7, 7, 7, 7, 7, 7, 7],
-];
-
 const ADAM7_PASSES = [
   {
     // pass 1 - 1px
@@ -121,7 +110,7 @@ const ADAM7_PASSES = [
 type Image = {
   passWidth: number;
   passHeight: number;
-  passIndex?: number;
+  passIndex: number;
 };
 
 function buildImages(
@@ -134,6 +123,7 @@ function buildImages(
       {
         passWidth: width,
         passHeight: height,
+        passIndex: 0,
       },
     ];
   }
@@ -170,6 +160,26 @@ function buildImages(
   return images;
 }
 
+function getPixelIndex(
+  interlace: number,
+  width: number,
+  widthIndex: number,
+  heightIndex: number,
+  passIndex: number,
+): number {
+  if (!interlace) {
+    return (width * heightIndex + widthIndex) << 2;
+  }
+  const pass = ADAM7_PASSES[passIndex];
+  const remainingX = widthIndex % pass.x.length;
+  const remainingY = heightIndex % pass.y.length;
+  const repeatX = (widthIndex - remainingX) / pass.x.length;
+  const repeatY = (heightIndex - remainingY) / pass.y.length;
+  const offsetX = pass.x[remainingX];
+  const offsetY = pass.y[remainingY];
+  return (width * ((repeatY << 3) + offsetY) + (repeatX << 3) + offsetX) << 2;
+}
+
 export function decodeIDAT(
   idatUint8Array: Uint8Array,
   interlace: number,
@@ -181,13 +191,13 @@ export function decodeIDAT(
 ) {
   let pixels: number[] = [];
   // inflate
-  const data = pako.inflate(idatUint8Array);
+  const inflatedData = pako.inflate(idatUint8Array);
   const images = buildImages(interlace, width, height);
   const channelPerPixel = COLOR_TYPES_TO_CHANNEL_PER_PIXEL[colorType];
 
   let index = 0;
-  for (let i = 0; i < images.length; i++) {
-    const { passWidth, passHeight, passIndex } = images[i];
+  for (let imageIndex = 0; imageIndex < images.length; imageIndex++) {
+    const { passWidth, passHeight, passIndex } = images[imageIndex];
 
     for (let heightIndex = 0; heightIndex < passHeight; heightIndex++) {
       // scanline
@@ -196,13 +206,13 @@ export function decodeIDAT(
         ((passWidth * channelPerPixel * depth + 7) >> 3) + FILTER_LENGTH;
 
       // unfilter
-      const filterType = idatUint8Array[index + 0];
+      const filterType = inflatedData[index + 0];
       if (!(filterType in FILTER_TYPES)) {
         throw new Error('Unsupported filter type: ' + filterType);
       }
       const unfilter = unfilters[filterType as FILTER_TYPES];
       const unfilteredLine = unfilter(
-        idatUint8Array.slice(index + 1, index + scanlineWidth),
+        inflatedData.slice(index + 1, index + scanlineWidth),
       );
       // to channels
       let channelIndex = 0;
@@ -239,17 +249,20 @@ export function decodeIDAT(
       for (let widthIndex = 0; widthIndex < passWidth; widthIndex++) {
         // to pixel
         const pixel = getPixelFromChannels();
+        const pixelIndex = getPixelIndex(
+          interlace,
+          width,
+          widthIndex,
+          heightIndex,
+          passIndex,
+        );
+        for (let i = 0; i < pixel.length; i++) {
+          pixels[pixelIndex + i] = pixel[i];
+        }
       }
 
       index += scanlineWidth;
     }
-  }
-
-  let rowIndex = 0;
-  while (rowIndex < data.length) {
-    let channelIndex = 0;
-
-    for (let pixelIndex = 0; pixelIndex < width; pixelIndex++) {}
   }
   return pixels;
 }

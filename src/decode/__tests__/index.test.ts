@@ -12,12 +12,12 @@ import decode from '..';
 const fixturesPath = path.join(__dirname, 'fixtures');
 
 test('decode', async function() {
-  // const testcaseNames = await glob('*', {
-  //   cwd: fixturesPath,
-  //   onlyDirectories: true,
-  // });
+  const testcaseNames = await glob('*', {
+    cwd: fixturesPath,
+    onlyDirectories: true,
+  });
   // TODO: interlace image width not 8x
-  const testcaseNames = ['interlace'];
+  // const testcaseNames = ['interlace'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
@@ -44,6 +44,7 @@ test('decode', async function() {
           actualOutputPath,
           JSON.stringify(decodedData, null, 2),
         );
+        console.error(testcaseName);
         expect(false).toBe(true);
       }
     }),
