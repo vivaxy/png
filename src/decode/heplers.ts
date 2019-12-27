@@ -2,55 +2,32 @@
  * @since 2019-12-26 07:30
  * @author vivaxy
  */
-export const PNG_SIGNATURE = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
-export enum COLOR_TYPES {
-  GRAYSCALE = 0,
-  TRUE_COLOR = 2,
-  PALETTE = 3,
-  GRAYSCALE_WITH_APLHA = 4 | GRAYSCALE,
-  TRUE_COLOR_WITH_APLHA = 4 | TRUE_COLOR,
-}
-export const COLOR_TYPE_TO_CHANNEL: {
-  [colorType in COLOR_TYPES]: number;
-} = {
-  [COLOR_TYPES.GRAYSCALE]: 1,
-  [COLOR_TYPES.TRUE_COLOR]: 3,
-  [COLOR_TYPES.PALETTE]: 1,
-  [COLOR_TYPES.GRAYSCALE_WITH_APLHA]: 2,
-  [COLOR_TYPES.TRUE_COLOR_WITH_APLHA]: 4,
-};
-export const FILTER_LENGTH = 1;
-export enum FILTER_TYPES {
-  NONE = 0,
-  SUB = 1,
-  UP = 2,
-  AVERAGE = 3,
-  PAETH = 4,
-}
-export const unfilters: {
-  [filterType in FILTER_TYPES]: (data: Uint8Array) => Uint8Array;
-} = {
+import * as pako from 'pako';
+import {
+  COLOR_TYPES,
+  COLOR_TYPES_TO_CHANNEL_PER_PIXEL,
+} from '../helpers/color-types';
+import { FILTER_TYPES, FILTER_LENGTH } from '../helpers/filters';
+
+const unfilters = {
   [FILTER_TYPES.NONE](data: Uint8Array) {
     return data;
   },
   [FILTER_TYPES.SUB](data: Uint8Array) {
-    return data;
+    throw new Error('Unsupported filter type: ' + FILTER_TYPES.SUB);
   },
   [FILTER_TYPES.UP](data: Uint8Array) {
-    return data;
+    throw new Error('Unsupported filter type: ' + FILTER_TYPES.UP);
   },
   [FILTER_TYPES.AVERAGE](data: Uint8Array) {
-    return data;
+    throw new Error('Unsupported filter type: ' + FILTER_TYPES.AVERAGE);
   },
   [FILTER_TYPES.PAETH](data: Uint8Array) {
-    return data;
+    throw new Error('Unsupported filter type: ' + FILTER_TYPES.PAETH);
   },
 };
 
-export function buildChannels(
-  unfilteredLine: Uint8Array,
-  depth: number,
-): number[] {
+function buildChannels(unfilteredLine: Uint8Array, depth: number): number[] {
   const channels = [];
   if (depth === 1) {
     for (let i = 0; i < unfilteredLine.length; i++) {
@@ -92,9 +69,187 @@ export function buildChannels(
   return channels;
 }
 
-export function concatUint8Array(a: Uint8Array, b: Uint8Array): Uint8Array {
-  const concated = new Uint8Array(a.length + b.length);
-  concated.set(a);
-  concated.set(b, a.length);
-  return concated;
+const ADAM7 = [
+  [1, 6, 4, 6, 2, 6, 4, 6],
+  [7, 7, 7, 7, 7, 7, 7, 7],
+  [5, 6, 5, 6, 5, 6, 5, 6],
+  [7, 7, 7, 7, 7, 7, 7, 7],
+  [3, 6, 4, 6, 3, 6, 4, 6],
+  [7, 7, 7, 7, 7, 7, 7, 7],
+  [5, 6, 5, 6, 5, 6, 5, 6],
+  [7, 7, 7, 7, 7, 7, 7, 7],
+];
+
+const ADAM7_PASSES = [
+  {
+    // pass 1 - 1px
+    x: [0],
+    y: [0],
+  },
+  {
+    // pass 2 - 1px
+    x: [4],
+    y: [0],
+  },
+  {
+    // pass 3 - 2px
+    x: [0, 4],
+    y: [4],
+  },
+  {
+    // pass 4 - 4px
+    x: [2, 6],
+    y: [0, 4],
+  },
+  {
+    // pass 5 - 8px
+    x: [0, 2, 4, 6],
+    y: [2, 6],
+  },
+  {
+    // pass 6 - 16px
+    x: [1, 3, 5, 7],
+    y: [0, 2, 4, 6],
+  },
+  {
+    // pass 7 - 32px
+    x: [0, 1, 2, 3, 4, 5, 6, 7],
+    y: [1, 3, 5, 7],
+  },
+];
+
+type Image = {
+  passWidth: number;
+  passHeight: number;
+  passIndex?: number;
+};
+
+function buildImages(
+  interlace: number,
+  width: number,
+  height: number,
+): Image[] {
+  if (!interlace) {
+    return [
+      {
+        passWidth: width,
+        passHeight: height,
+      },
+    ];
+  }
+  const images: Image[] = [];
+  ADAM7_PASSES.forEach(function({ x, y }, passIndex) {
+    const remainingX = width % 8;
+    const remainingY = height % 8;
+    const repeatX = (width - remainingX) >> 3;
+    const repeatY = (height - remainingY) >> 3;
+    let passWidth = repeatX * x.length;
+    for (let i = 0; i < x.length; i++) {
+      if (x[i] < remainingX) {
+        passWidth++;
+      } else {
+        break;
+      }
+    }
+    let passHeight = repeatY * y.length;
+    for (let i = 0; i < y.length; i++) {
+      if (y[i] < remainingY) {
+        passHeight++;
+      } else {
+        break;
+      }
+    }
+    if (passWidth && passHeight) {
+      images.push({
+        passWidth: passWidth,
+        passHeight: passHeight,
+        passIndex: passIndex,
+      });
+    }
+  });
+  return images;
+}
+
+export function decodeIDAT(
+  idatUint8Array: Uint8Array,
+  interlace: number,
+  colorType: COLOR_TYPES,
+  width: number,
+  height: number,
+  depth: number,
+  palette: [number, number, number, number][],
+) {
+  let pixels: number[] = [];
+  // inflate
+  const data = pako.inflate(idatUint8Array);
+  const images = buildImages(interlace, width, height);
+  const channelPerPixel = COLOR_TYPES_TO_CHANNEL_PER_PIXEL[colorType];
+
+  let index = 0;
+  for (let i = 0; i < images.length; i++) {
+    const { passWidth, passHeight, passIndex } = images[i];
+
+    for (let heightIndex = 0; heightIndex < passHeight; heightIndex++) {
+      // scanline
+      // const scanlineWidth = Math.ceil(metadata.width * channel * metadata.depth / 8) + FILTER_LENGTH;
+      const scanlineWidth =
+        ((passWidth * channelPerPixel * depth + 7) >> 3) + FILTER_LENGTH;
+
+      // unfilter
+      const filterType = idatUint8Array[index + 0];
+      if (!(filterType in FILTER_TYPES)) {
+        throw new Error('Unsupported filter type: ' + filterType);
+      }
+      const unfilter = unfilters[filterType as FILTER_TYPES];
+      const unfilteredLine = unfilter(
+        idatUint8Array.slice(index + 1, index + scanlineWidth),
+      );
+      // to channels
+      let channelIndex = 0;
+      const channels = buildChannels(unfilteredLine, depth);
+
+      function getPixelFromChannels() {
+        if (colorType === COLOR_TYPES.GRAYSCALE) {
+          const color = channels[channelIndex++];
+          return [color, color, color, 0xff];
+        }
+        if (colorType === COLOR_TYPES.TRUE_COLOR) {
+          return [
+            channels[channelIndex++],
+            channels[channelIndex++],
+            channels[channelIndex++],
+            0xff,
+          ];
+        }
+        if (colorType === COLOR_TYPES.PALETTE) {
+          const paletteIndex = channels[channelIndex++];
+          return palette[paletteIndex];
+        }
+        if (colorType === COLOR_TYPES.TRUE_COLOR_WITH_APLHA) {
+          return [
+            channels[channelIndex++],
+            channels[channelIndex++],
+            channels[channelIndex++],
+            channels[channelIndex++],
+          ];
+        }
+        throw new Error('Unsupported color type: ' + colorType);
+      }
+
+      for (let widthIndex = 0; widthIndex < passWidth; widthIndex++) {
+        // to pixel
+        const pixel = getPixelFromChannels();
+      }
+
+      index += scanlineWidth;
+    }
+  }
+
+  let rowIndex = 0;
+  while (rowIndex < data.length) {
+    let channelIndex = 0;
+
+    for (let pixelIndex = 0; pixelIndex < width; pixelIndex++) {}
+  }
+  return pixels;
 }
