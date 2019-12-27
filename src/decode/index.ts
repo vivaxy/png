@@ -2,18 +2,11 @@
  * @since 2019-10-30 03:00
  * @author vivaxy
  */
-import * as pako from 'pako';
 import crc32 from '../helpers/crc32';
-import {
-  PNG_SIGNATURE,
-  COLOR_TYPES,
-  COLOR_TYPE_TO_CHANNEL,
-  FILTER_LENGTH,
-  FILTER_TYPES,
-  unfilters,
-  buildChannels,
-  concatUint8Array,
-} from './heplers';
+import PNG_SIGNATURE from '../helpers/signature';
+import { COLOR_TYPES } from '../helpers/color-types';
+import { concatUint8Array } from '../helpers/typed-array';
+import { decodeIDAT } from './heplers';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
@@ -176,51 +169,14 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   parseChunkBegin();
 
   // 3. Decode all IDAT
-  // inflate
-  const data = pako.inflate(idatUint8Array);
-
-  // scanline
-  const channel = COLOR_TYPE_TO_CHANNEL[metadata.colorType];
-  const scanlineWidth =
-    Math.ceil((metadata.width * channel * metadata.depth) / 8) + FILTER_LENGTH;
-
-  let rowIndex = 0;
-  while (rowIndex < data.length) {
-    const scanline = data.slice(rowIndex, rowIndex + scanlineWidth);
-    rowIndex += scanlineWidth;
-
-    // unfilter
-    const filterType = scanline[0] as FILTER_TYPES;
-    if (!(filterType in unfilters)) {
-      throw new Error('Unsupported filter type: ' + filterType);
-    }
-    const unfilter = unfilters[filterType];
-    const unfilteredLine = unfilter!(scanline.slice(1));
-
-    // to channel
-    const channels = buildChannels(unfilteredLine, metadata.depth);
-    let channelIndex = 0;
-
-    for (let pixelIndex = 0; pixelIndex < metadata.width; pixelIndex++) {
-      const channelPerPixel = COLOR_TYPE_TO_CHANNEL[metadata.colorType];
-      // to pixel
-      const pixel = channels.slice(
-        channelIndex,
-        (channelIndex += channelPerPixel),
-      );
-
-      // to imageData
-      if (metadata.colorType === COLOR_TYPES.TRUE_COLOR) {
-        metadata.data = metadata.data.concat(pixel.concat(255));
-      } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
-        metadata.data = metadata.data.concat(metadata.palette[pixel[0]]);
-      } else if (metadata.colorType === COLOR_TYPES.TRUE_COLOR_WITH_APLHA) {
-        metadata.data = metadata.data.concat(pixel);
-      } else {
-        throw new Error('Unsupported color type: ' + metadata.colorType);
-      }
-    }
-  }
-
+  metadata.data = decodeIDAT(
+    idatUint8Array,
+    metadata.interlace,
+    metadata.colorType,
+    metadata.width,
+    metadata.height,
+    metadata.depth,
+    metadata.palette,
+  );
   return metadata;
 }

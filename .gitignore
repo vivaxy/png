@@ -6,4 +6,3 @@ node_modules
 coverage.lcov
 coverage
 lib
-.vscode
