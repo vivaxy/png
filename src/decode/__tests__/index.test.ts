@@ -16,7 +16,6 @@ test('decode', async function() {
     cwd: fixturesPath,
     onlyDirectories: true,
   });
-  // TODO: interlace image width not 8x
   // const testcaseNames = ['color-type-4'];
 
   await Promise.all(
