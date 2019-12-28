@@ -13,23 +13,47 @@ const unfilters = {
   [FILTER_TYPES.NONE](data: Uint8Array) {
     return data;
   },
-  [FILTER_TYPES.SUB](data: Uint8Array) {
-    throw new Error('Unsupported filter type: ' + FILTER_TYPES.SUB);
+  [FILTER_TYPES.SUB](data: Uint8Array, bytePerPixel: number) {
+    const unfiltered = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      if (i < bytePerPixel) {
+        unfiltered[i] = data[i];
+      } else {
+        unfiltered[i] = unfiltered[i - bytePerPixel] + data[i];
+      }
+    }
+    return unfiltered;
   },
-  [FILTER_TYPES.UP](data: Uint8Array) {
-    throw new Error('Unsupported filter type: ' + FILTER_TYPES.UP);
+  [FILTER_TYPES.UP](
+    data: Uint8Array,
+    bytePerPixel: number,
+    prevUnfilteredLine: Uint8Array,
+  ) {
+    const unfilteredLine = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      unfilteredLine[i] = prevUnfilteredLine[i] + data[i];
+    }
+    return unfilteredLine;
   },
-  [FILTER_TYPES.AVERAGE](data: Uint8Array) {
+  [FILTER_TYPES.AVERAGE](
+    data: Uint8Array,
+    bytePerPixel: number,
+    prevUnfilteredLine: Uint8Array,
+  ) {
     throw new Error('Unsupported filter type: ' + FILTER_TYPES.AVERAGE);
   },
-  [FILTER_TYPES.PAETH](data: Uint8Array) {
+  [FILTER_TYPES.PAETH](
+    data: Uint8Array,
+    bytePerPixel: number,
+    prevUnfilteredLine: Uint8Array,
+  ) {
     throw new Error('Unsupported filter type: ' + FILTER_TYPES.PAETH);
   },
 };
 
 function buildChannels(unfilteredLine: Uint8Array, depth: number): number[] {
-  const channels = [];
   if (depth === 1) {
+    const channels = [];
     for (let i = 0; i < unfilteredLine.length; i++) {
       const uint8 = unfilteredLine[i];
       channels.push(
@@ -43,7 +67,10 @@ function buildChannels(unfilteredLine: Uint8Array, depth: number): number[] {
         uint8 & 1,
       );
     }
-  } else if (depth === 2) {
+    return channels;
+  }
+  if (depth === 2) {
+    const channels = [];
     for (let i = 0; i < unfilteredLine.length; i++) {
       const uint8 = unfilteredLine[i];
       channels.push(
@@ -53,20 +80,27 @@ function buildChannels(unfilteredLine: Uint8Array, depth: number): number[] {
         uint8 & 3,
       );
     }
-  } else if (depth === 4) {
+    return channels;
+  }
+  if (depth === 4) {
+    const channels = [];
     for (let i = 0; i < unfilteredLine.length; i++) {
       const uint8 = unfilteredLine[i];
       channels.push((uint8 >> 4) & 15, uint8 & 15);
     }
-  } else if (depth === 8) {
-    return Array.from(unfilteredLine);
-  } else if (depth === 16) {
-    throw new Error('Unsupported depth: ' + depth);
-  } else {
-    throw new Error('Unsupported depth: ' + depth);
+    return channels;
   }
-
-  return channels;
+  if (depth === 8) {
+    return Array.from(unfilteredLine);
+  }
+  if (depth === 16) {
+    const channels = [];
+    for (let i = 0; i < unfilteredLine.length; i += 2) {
+      channels.push((unfilteredLine[i] << 8) | unfilteredLine[i + 1]);
+    }
+    return channels;
+  }
+  throw new Error('Unsupported depth: ' + depth);
 }
 
 const ADAM7_PASSES = [
@@ -180,8 +214,14 @@ function getPixelIndex(
   return (width * ((repeatY << 3) + offsetY) + (repeatX << 3) + offsetX) << 2;
 }
 
+function rescaleSample(channel: number, depth: number) {
+  const maxInSample = 2 ** depth - 1;
+  const maxOutSample = 0xff;
+  return Math.round((channel * maxOutSample) / maxInSample);
+}
+
 export function decodeIDAT(
-  idatUint8Array: Uint8Array,
+  deflatedData: Uint8Array,
   interlace: number,
   colorType: COLOR_TYPES,
   width: number,
@@ -191,43 +231,48 @@ export function decodeIDAT(
 ) {
   let pixels: number[] = [];
   // inflate
-  const inflatedData = pako.inflate(idatUint8Array);
+  const inflatedData = pako.inflate(deflatedData);
   const images = buildImages(interlace, width, height);
   const channelPerPixel = COLOR_TYPES_TO_CHANNEL_PER_PIXEL[colorType];
+  const bpp = channelPerPixel * depth;
 
-  let index = 0;
+  let dataIndex = 0;
+  let prevUnfilteredLine = new Uint8Array();
   for (let imageIndex = 0; imageIndex < images.length; imageIndex++) {
     const { passWidth, passHeight, passIndex } = images[imageIndex];
 
     for (let heightIndex = 0; heightIndex < passHeight; heightIndex++) {
       // scanline
       // const scanlineWidth = Math.ceil(metadata.width * channel * metadata.depth / 8) + FILTER_LENGTH;
-      const scanlineWidth =
-        ((passWidth * channelPerPixel * depth + 7) >> 3) + FILTER_LENGTH;
+      const scanlineWidth = ((passWidth * bpp + 7) >> 3) + FILTER_LENGTH;
 
       // unfilter
-      const filterType = inflatedData[index + 0];
+      const filterType = inflatedData[dataIndex + 0];
       if (!(filterType in FILTER_TYPES)) {
         throw new Error('Unsupported filter type: ' + filterType);
       }
       const unfilter = unfilters[filterType as FILTER_TYPES];
       const unfilteredLine = unfilter(
-        inflatedData.slice(index + 1, index + scanlineWidth),
+        inflatedData.slice(dataIndex + 1, dataIndex + scanlineWidth),
+        bpp >> 3,
+        prevUnfilteredLine,
       );
+      prevUnfilteredLine = unfilteredLine;
+
       // to channels
       let channelIndex = 0;
       const channels = buildChannels(unfilteredLine, depth);
 
       function getPixelFromChannels() {
         if (colorType === COLOR_TYPES.GRAYSCALE) {
-          const color = channels[channelIndex++];
+          const color = rescaleSample(channels[channelIndex++], depth);
           return [color, color, color, 0xff];
         }
         if (colorType === COLOR_TYPES.TRUE_COLOR) {
           return [
-            channels[channelIndex++],
-            channels[channelIndex++],
-            channels[channelIndex++],
+            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth),
             0xff,
           ];
         }
@@ -237,10 +282,10 @@ export function decodeIDAT(
         }
         if (colorType === COLOR_TYPES.TRUE_COLOR_WITH_APLHA) {
           return [
-            channels[channelIndex++],
-            channels[channelIndex++],
-            channels[channelIndex++],
-            channels[channelIndex++],
+            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth),
           ];
         }
         throw new Error('Unsupported color type: ' + colorType);
@@ -261,7 +306,7 @@ export function decodeIDAT(
         }
       }
 
-      index += scanlineWidth;
+      dataIndex += scanlineWidth;
     }
   }
   return pixels;

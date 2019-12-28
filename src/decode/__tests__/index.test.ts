@@ -17,7 +17,7 @@ test('decode', async function() {
     onlyDirectories: true,
   });
   // TODO: interlace image width not 8x
-  // const testcaseNames = ['interlace'];
+  // const testcaseNames = ['chunk-IEND'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
@@ -34,7 +34,13 @@ test('decode', async function() {
       );
       const imageBinaryData = await fse.readFile(imagePath);
       const expectedOutputData = await fse.readJson(expectedOutputPath);
-      const decodedData = decode(imageBinaryData);
+      let decodedData = null;
+      try {
+        decodedData = decode(imageBinaryData);
+      } catch (ex) {
+        console.error(testcaseName + ' failed with error: ' + ex.stack);
+        expect(false).toBe(true);
+      }
       try {
         assert.deepStrictEqual(decodedData, expectedOutputData);
         await fse.remove(actualOutputPath);
@@ -44,7 +50,7 @@ test('decode', async function() {
           actualOutputPath,
           JSON.stringify(decodedData, null, 2),
         );
-        console.error(testcaseName);
+        console.error(testcaseName + ' failed');
         expect(false).toBe(true);
       }
     }),
