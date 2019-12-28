@@ -44,7 +44,15 @@ const unfilters = {
     bytePerPixel: number,
     prevUnfilteredLine: Uint8Array,
   ) {
-    throw new Error('Unsupported filter type: ' + FILTER_TYPES.AVERAGE);
+    const unfilteredLine = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      const left = i < bytePerPixel ? 0 : unfilteredLine[i - bytePerPixel];
+      const above =
+        prevUnfilteredLine[i] === undefined ? 0 : prevUnfilteredLine[i];
+      const avg = (left + above) >> 1;
+      unfilteredLine[i] = data[i] + avg;
+    }
+    return unfilteredLine;
   },
   [FILTER_TYPES.PAETH](
     data: Uint8Array,
