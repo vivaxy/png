@@ -9,6 +9,7 @@ import {
 } from '../helpers/color-types';
 import { FILTER_TYPES, FILTER_LENGTH } from '../helpers/filters';
 import paeth from '../helpers/paeth';
+import rescaleSample from './rescale-sample';
 
 const unfilters = {
   [FILTER_TYPES.NONE](data: Uint8Array) {
@@ -238,15 +239,6 @@ function getPixelIndex(
   return (width * ((repeatY << 3) + offsetY) + (repeatX << 3) + offsetX) << 2;
 }
 
-function rescaleSample(channel: number, depth: number) {
-  if (depth === 8) {
-    return channel;
-  }
-  const maxInSample = 2 ** depth - 1;
-  const maxOutSample = 0xff;
-  return Math.round((channel * maxOutSample) / maxInSample);
-}
-
 export default function decodeIDAT(
   deflatedData: Uint8Array,
   interlace: number,
@@ -254,7 +246,7 @@ export default function decodeIDAT(
   width: number,
   height: number,
   depth: number,
-  palette: [number, number, number, number][],
+  palette?: [number, number, number, number][],
 ) {
   let pixels: number[] = [];
   // inflate
@@ -305,6 +297,9 @@ export default function decodeIDAT(
         }
         if (colorType === COLOR_TYPES.PALETTE) {
           const paletteIndex = channels[channelIndex++];
+          if (!palette) {
+            throw new Error('Mising chunk: PLTE');
+          }
           return palette[paletteIndex];
         }
         if (colorType === COLOR_TYPES.GRAYSCALE_WITH_APLHA) {

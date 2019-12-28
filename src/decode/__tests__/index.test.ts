@@ -16,7 +16,7 @@ test('decode', async function() {
     cwd: fixturesPath,
     onlyDirectories: true,
   });
-  // const testcaseNames = ['color-type-4'];
+  // const testcaseNames = ['chunk-bKGD'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {

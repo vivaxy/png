@@ -7,6 +7,7 @@ import PNG_SIGNATURE from '../helpers/signature';
 import { COLOR_TYPES } from '../helpers/color-types';
 import { concatUint8Array } from '../helpers/typed-array';
 import decodeIDAT from './decode-idat';
+import rescaleSample from './rescale-sample';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
@@ -20,7 +21,8 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     compression: number;
     interlace: number;
     filter: number;
-    palette: [number, number, number, number][];
+    palette?: [number, number, number, number][];
+    background?: [number, number, number, number];
     data: number[];
   } = {
     width: 0,
@@ -30,7 +32,6 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     compression: 0,
     interlace: 0,
     filter: 0,
-    palette: [],
     data: [],
   };
 
@@ -75,6 +76,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     IDAT: parseIDAT,
     IEND: parseIEND,
     tRNS: parseTRNS,
+    bKGD: parseBKGD,
   };
 
   function parseIHDR(startIndex: number, length: number) {
@@ -94,14 +96,16 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parsePLTE(startIndex: number, length: number) {
+    const palette: [number, number, number, number][] = [];
     for (let i = 0; i < length; i += 3) {
-      metadata.palette.push([
+      palette.push([
         typedArray[index++],
         typedArray[index++],
         typedArray[index++],
         0xff, // default to intransparent
       ]);
     }
+    metadata.palette = palette;
 
     parseChunkEnd(startIndex, length);
   }
@@ -122,9 +126,45 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseTRNS(startIndex: number, length: number) {
+    if (!metadata.palette) {
+      throw new Error('Missing chunk: PLTE');
+    }
     for (let i = 0; i < length; i++) {
       metadata.palette[i][3] = typedArray[index];
       index++;
+    }
+
+    parseChunkEnd(startIndex, length);
+  }
+
+  function parseBKGD(startIndex: number, length: number) {
+    if ((metadata.colorType & 3) === COLOR_TYPES.GRAYSCALE) {
+      const color = rescaleSample(
+        (typedArray[index++] << 8) | typedArray[index++],
+        metadata.depth,
+      );
+      metadata.background = [color, color, color, 0xff];
+    } else if ((metadata.colorType & 3) === COLOR_TYPES.TRUE_COLOR) {
+      metadata.background = [
+        rescaleSample(
+          (typedArray[index++] << 8) | typedArray[index++],
+          metadata.depth,
+        ),
+        rescaleSample(
+          (typedArray[index++] << 8) | typedArray[index++],
+          metadata.depth,
+        ),
+        rescaleSample(
+          (typedArray[index++] << 8) | typedArray[index++],
+          metadata.depth,
+        ),
+        0xff,
+      ];
+    } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
+      if (!metadata.palette) {
+        throw new Error('Missing chunk: PLTE');
+      }
+      metadata.background = metadata.palette[typedArray[index++]];
     }
 
     parseChunkEnd(startIndex, length);
