@@ -107,10 +107,6 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseIDAT(startIndex: number, length: number) {
-    // TODO: remove debugger
-    if (idatUint8Array.length) {
-      debugger;
-    }
     // save data, decode later
     idatUint8Array = concatUint8Array(
       idatUint8Array,
