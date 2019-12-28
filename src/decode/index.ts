@@ -14,17 +14,17 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   let idatUint8Array = new Uint8Array();
 
   const metadata: {
-    width: number;
-    height: number;
-    depth: number;
-    colorType: COLOR_TYPES;
-    compression: number;
-    interlace: number;
-    filter: number;
-    palette?: [number, number, number, number][];
-    background?: [number, number, number, number];
-    transparent?: [number, number, number, number];
-    data: number[];
+    width: number; // image width
+    height: number; // image height
+    depth: number; // bit depth; depth per channel
+    colorType: COLOR_TYPES; // color type as grayscale, true color, palette or with alpha
+    compression: number; // compression method; always be 0
+    interlace: number; // interlaced
+    filter: number; // filter method; always be 0
+    palette?: [number, number, number, number][]; // palette if presented
+    background?: [number, number, number, number]; // background color if presented
+    transparent?: [number, number, number, number]; // transparent color if presented
+    data: number[]; // ImageData
   } = {
     width: 0,
     height: 0,

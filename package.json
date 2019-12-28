@@ -9,7 +9,15 @@
     "parser",
     "parse",
     "decode",
-    "decoder"
+    "decoder",
+    "js-png",
+    "node-png",
+    "png-js",
+    "png-node",
+    "browser-png",
+    "png-browser",
+    "pngjs",
+    "png-parser"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.js",

@@ -16,12 +16,14 @@
 ```js
 import png from '@vivaxy/png';
 
-const { width, height, data } = png.decode(imageBuffer);
+const metadata = png.decode(imageBuffer);
 ```
+
+See `metadata` type in [source code](src/decode/index.ts).
 
 #
 
-Project created by [create-n](https://github.com/vivaxy/create-n).
+_Project created by [create-n](https://github.com/vivaxy/create-n)._
 
 [travis-image]: https://img.shields.io/travis/vivaxy/png.svg?style=flat-square
 [travis-url]: https://travis-ci.org/vivaxy/png
