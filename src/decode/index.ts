@@ -6,11 +6,11 @@ import crc32 from '../helpers/crc32';
 import PNG_SIGNATURE from '../helpers/signature';
 import { COLOR_TYPES } from '../helpers/color-types';
 import { concatUint8Array } from '../helpers/typed-array';
-import { decodeIDAT } from './heplers';
+import decodeIDAT from './decode-idat';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
-  let idatUint8Array = new Uint8Array([]);
+  let idatUint8Array = new Uint8Array();
 
   const metadata: {
     width: number;
@@ -107,6 +107,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseIDAT(startIndex: number, length: number) {
+    // TODO: remove debugger
+    if (idatUint8Array.length) {
+      debugger;
+    }
     // save data, decode later
     idatUint8Array = concatUint8Array(
       idatUint8Array,

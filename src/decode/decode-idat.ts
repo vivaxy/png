@@ -8,6 +8,7 @@ import {
   COLOR_TYPES_TO_CHANNEL_PER_PIXEL,
 } from '../helpers/color-types';
 import { FILTER_TYPES, FILTER_LENGTH } from '../helpers/filters';
+import paeth from '../helpers/paeth';
 
 const unfilters = {
   [FILTER_TYPES.NONE](data: Uint8Array) {
@@ -31,6 +32,9 @@ const unfilters = {
   ) {
     const unfilteredLine = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
+      if (prevUnfilteredLine[i] === undefined) {
+        throw new Error('Unexpected previous unfiltered line item');
+      }
       unfilteredLine[i] = prevUnfilteredLine[i] + data[i];
     }
     return unfilteredLine;
@@ -47,7 +51,19 @@ const unfilters = {
     bytePerPixel: number,
     prevUnfilteredLine: Uint8Array,
   ) {
-    throw new Error('Unsupported filter type: ' + FILTER_TYPES.PAETH);
+    const unfilteredLine = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      if (prevUnfilteredLine[i] === undefined) {
+        throw new Error('Unexpected previous unfiltered line item at: ' + i);
+      }
+      const left = i < bytePerPixel ? 0 : unfilteredLine[i - bytePerPixel];
+      const above = prevUnfilteredLine[i];
+      const upperLeft =
+        i < bytePerPixel ? 0 : prevUnfilteredLine[i - bytePerPixel];
+      const p = paeth(left, above, upperLeft);
+      unfilteredLine[i] = data[i] + p;
+    }
+    return unfilteredLine;
   },
 };
 
@@ -215,12 +231,15 @@ function getPixelIndex(
 }
 
 function rescaleSample(channel: number, depth: number) {
+  if (depth === 8) {
+    return channel;
+  }
   const maxInSample = 2 ** depth - 1;
   const maxOutSample = 0xff;
   return Math.round((channel * maxOutSample) / maxInSample);
 }
 
-export function decodeIDAT(
+export default function decodeIDAT(
   deflatedData: Uint8Array,
   interlace: number,
   colorType: COLOR_TYPES,
@@ -279,6 +298,15 @@ export function decodeIDAT(
         if (colorType === COLOR_TYPES.PALETTE) {
           const paletteIndex = channels[channelIndex++];
           return palette[paletteIndex];
+        }
+        if (colorType === COLOR_TYPES.GRAYSCALE_WITH_APLHA) {
+          const color = rescaleSample(channels[channelIndex++], depth);
+          return [
+            color,
+            color,
+            color,
+            rescaleSample(channels[channelIndex++], depth),
+          ];
         }
         if (colorType === COLOR_TYPES.TRUE_COLOR_WITH_APLHA) {
           return [

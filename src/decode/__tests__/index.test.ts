@@ -17,7 +17,7 @@ test('decode', async function() {
     onlyDirectories: true,
   });
   // TODO: interlace image width not 8x
-  // const testcaseNames = ['chunk-IEND'];
+  // const testcaseNames = ['color-type-4'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
