@@ -9,6 +9,7 @@ import * as glob from 'fast-glob';
 
 import decode from '..';
 
+jest.setTimeout(10e3);
 const fixturesPath = path.join(__dirname, 'fixtures');
 
 test('decode', async function() {
@@ -16,7 +17,7 @@ test('decode', async function() {
     cwd: fixturesPath,
     onlyDirectories: true,
   });
-  // const testcaseNames = ['chunk-bKGD'];
+  // const testcaseNames = ['chunk-tRNS-color-type-0'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {

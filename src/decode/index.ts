@@ -23,6 +23,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     filter: number;
     palette?: [number, number, number, number][];
     background?: [number, number, number, number];
+    transparent?: [number, number, number, number];
     data: number[];
   } = {
     width: 0,
@@ -102,7 +103,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         typedArray[index++],
         typedArray[index++],
         typedArray[index++],
-        0xff, // default to intransparent
+        0xff, // default to opaque
       ]);
     }
     metadata.palette = palette;
@@ -126,12 +127,37 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseTRNS(startIndex: number, length: number) {
-    if (!metadata.palette) {
-      throw new Error('Missing chunk: PLTE');
-    }
-    for (let i = 0; i < length; i++) {
-      metadata.palette[i][3] = typedArray[index];
-      index++;
+    if (metadata.colorType === COLOR_TYPES.GRAYSCALE) {
+      const color = rescaleSample(
+        (typedArray[index++] << 8) | typedArray[index++],
+        metadata.depth,
+      );
+      metadata.transparent = [color, color, color, 0xff];
+    } else if (metadata.colorType === COLOR_TYPES.TRUE_COLOR) {
+      metadata.transparent = [
+        rescaleSample(
+          (typedArray[index++] << 8) | typedArray[index++],
+          metadata.depth,
+        ),
+        rescaleSample(
+          (typedArray[index++] << 8) | typedArray[index++],
+          metadata.depth,
+        ),
+        rescaleSample(
+          (typedArray[index++] << 8) | typedArray[index++],
+          metadata.depth,
+        ),
+        0xff,
+      ];
+    } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
+      if (!metadata.palette) {
+        throw new Error('Missing chunk: PLTE');
+      }
+      for (let i = 0; i < length; i++) {
+        metadata.palette[i][3] = typedArray[index++];
+      }
+    } else {
+      throw new Error('Prohibited tRNS for colorType ' + metadata.colorType);
     }
 
     parseChunkEnd(startIndex, length);
@@ -217,6 +243,8 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     metadata.height,
     metadata.depth,
     metadata.palette,
+    metadata.transparent,
   );
+
   return metadata;
 }

@@ -247,6 +247,7 @@ export default function decodeIDAT(
   height: number,
   depth: number,
   palette?: [number, number, number, number][],
+  transparent?: [number, number, number, number],
 ) {
   let pixels: number[] = [];
   // inflate
@@ -325,6 +326,15 @@ export default function decodeIDAT(
       for (let widthIndex = 0; widthIndex < passWidth; widthIndex++) {
         // to pixel
         const pixel = getPixelFromChannels();
+        // process transparent color when available
+        if (
+          transparent &&
+          pixel[0] === transparent[0] &&
+          pixel[1] === transparent[1] &&
+          pixel[2] === transparent[2]
+        ) {
+          pixel[3] = 0;
+        }
         const pixelIndex = getPixelIndex(
           interlace,
           width,
