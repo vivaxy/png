@@ -9,23 +9,43 @@ import { concatUint8Array } from '../helpers/typed-array';
 import decodeIDAT from './decode-idat';
 import rescaleSample from './rescale-sample';
 import { GAMMA_DIVISION } from '../helpers/gamma';
+import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
   let idatUint8Array = new Uint8Array();
 
   const metadata: {
-    width: number; // image width
-    height: number; // image height
-    depth: number; // bit depth; depth per channel
-    colorType: COLOR_TYPES; // color type as grayscale, true color, palette or with alpha
-    compression: number; // compression method; always be 0
-    interlace: number; // interlaced
-    filter: number; // filter method; always be 0
-    palette?: [number, number, number, number][]; // palette if presented
-    background?: [number, number, number, number]; // background color if presented
-    transparent?: [number, number, number, number]; // transparent color if presented
+    width: number; // Image width
+    height: number; // Image height
+    depth: number; // Bit depth; depth per channel
+    colorType: COLOR_TYPES; // Color type as grayscale, true color, palette or with alpha
+    compression: number; // Compression method; always be 0
+    interlace: number; // Interlaced
+    filter: number; // Filter method; always be 0
+    palette?: [number, number, number, number][]; // Palette if presented
+    transparent?: [number, number, number, number]; // Transparent color if presented
     gamma?: number; // Image gamma
+    chromaticities?: {
+      // Primary chromaticities
+      white: {
+        x: number;
+        y: number;
+      };
+      red: {
+        x: number;
+        y: number;
+      };
+      green: {
+        x: number;
+        y: number;
+      };
+      blue: {
+        x: number;
+        y: number;
+      };
+    };
+    background?: [number, number, number, number]; // Background color if presented
     data: number[]; // ImageData
   } = {
     width: 0,
@@ -72,18 +92,19 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   // 2. Chunks
   const chunkHandlers: {
-    [key: string]: (startIndex: number, length: number) => void;
+    [key: string]: (length: number) => void;
   } = {
     IHDR: parseIHDR,
     PLTE: parsePLTE,
     IDAT: parseIDAT,
     IEND: parseIEND,
     tRNS: parseTRNS,
-    bKGD: parseBKGD,
     gAMA: parseGAMA,
+    cHRM: parseCHRM,
+    bKGD: parseBKGD,
   };
 
-  function parseIHDR(startIndex: number, length: number) {
+  function parseIHDR() {
     metadata.width = readUInt32BE();
     metadata.height = readUInt32BE();
     metadata.depth = readUInt8();
@@ -95,11 +116,9 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     metadata.compression = readUInt8();
     metadata.filter = readUInt8();
     metadata.interlace = readUInt8();
-
-    parseChunkEnd(startIndex, length);
   }
 
-  function parsePLTE(startIndex: number, length: number) {
+  function parsePLTE(length: number) {
     const palette: [number, number, number, number][] = [];
     for (let i = 0; i < length; i += 3) {
       palette.push([
@@ -110,26 +129,22 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       ]);
     }
     metadata.palette = palette;
-
-    parseChunkEnd(startIndex, length);
   }
 
-  function parseIDAT(startIndex: number, length: number) {
+  function parseIDAT(length: number) {
     // save data, decode later
     idatUint8Array = concatUint8Array(
       idatUint8Array,
       typedArray.slice(index, index + length),
     );
     index += length;
-    parseChunkEnd(startIndex, length);
   }
 
-  function parseIEND(startIndex: number, length: number) {
+  function parseIEND(length: number) {
     index += length;
-    parseChunkEnd(startIndex, length);
   }
 
-  function parseTRNS(startIndex: number, length: number) {
+  function parseTRNS(length: number) {
     if (metadata.colorType === COLOR_TYPES.GRAYSCALE) {
       const color = rescaleSample(
         (typedArray[index++] << 8) | typedArray[index++],
@@ -162,11 +177,34 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     } else {
       throw new Error('Prohibited tRNS for colorType ' + metadata.colorType);
     }
-
-    parseChunkEnd(startIndex, length);
   }
 
-  function parseBKGD(startIndex: number, length: number) {
+  function parseGAMA() {
+    metadata.gamma = readUInt32BE() / GAMMA_DIVISION;
+  }
+
+  function parseCHRM() {
+    metadata.chromaticities = {
+      white: {
+        x: readUInt32BE() / CHROMATICITIES_DIVISION,
+        y: readUInt32BE() / CHROMATICITIES_DIVISION,
+      },
+      red: {
+        x: readUInt32BE() / CHROMATICITIES_DIVISION,
+        y: readUInt32BE() / CHROMATICITIES_DIVISION,
+      },
+      green: {
+        x: readUInt32BE() / CHROMATICITIES_DIVISION,
+        y: readUInt32BE() / CHROMATICITIES_DIVISION,
+      },
+      blue: {
+        x: readUInt32BE() / CHROMATICITIES_DIVISION,
+        y: readUInt32BE() / CHROMATICITIES_DIVISION,
+      },
+    };
+  }
+
+  function parseBKGD() {
     if ((metadata.colorType & 3) === COLOR_TYPES.GRAYSCALE) {
       const color = rescaleSample(
         (typedArray[index++] << 8) | typedArray[index++],
@@ -195,14 +233,6 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       }
       metadata.background = metadata.palette[typedArray[index++]];
     }
-
-    parseChunkEnd(startIndex, length);
-  }
-
-  function parseGAMA(startIndex: number, length: number) {
-    metadata.gamma = readUInt32BE() / GAMMA_DIVISION;
-
-    parseChunkEnd(startIndex, length);
   }
 
   function parseChunkBegin() {
@@ -211,15 +241,16 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     const type = readChunkType();
 
     if (chunkHandlers[type]) {
-      return chunkHandlers[type](startIndex, length);
+      chunkHandlers[type](length);
+    } else {
+      // const ancillary = Boolean(type.charCodeAt(0) & 0x20); // or critical
+      // if (!ancillary) {
+      //   throw new Error('Unsupported critical chunk type: ' + type);
+      // }
+      // Skip chunk
+      index += length;
     }
 
-    const ancillary = Boolean(type.charCodeAt(0) & 0x20); // or critical
-    if (!ancillary) {
-      throw new Error('Unsupported critical chunk type: ' + type);
-    }
-    // Skip chunk
-    index += length;
     parseChunkEnd(startIndex, length);
   }
 
