@@ -71,7 +71,13 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       };
     };
     background?: [number, number, number, number]; // Background color if presented
-    histogram?: number[];
+    histogram?: number[]; // Image histogram
+    physicalDimensions?: {
+      // Physical pixel dimensions
+      pixelPerUnitX: number;
+      pixelPerUnitY: number;
+      unit: number;
+    };
     data: number[]; // ImageData
   } = {
     width: 0,
@@ -428,9 +434,15 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     metadata.histogram = histogram;
   }
 
-  function parsePHYS(length: number) {
-    // TODO: implement
-    index += length;
+  function parsePHYS() {
+    const pixelPerUnitX = readUInt32BE();
+    const pixelPerUnitY = readUInt32BE();
+    const unit = readUInt8();
+    metadata.physicalDimensions = {
+      pixelPerUnitX,
+      pixelPerUnitY,
+      unit,
+    };
   }
 
   function parseSPLT(length: number) {
