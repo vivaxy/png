@@ -71,6 +71,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       };
     };
     background?: [number, number, number, number]; // Background color if presented
+    histogram?: number[];
     data: number[]; // ImageData
   } = {
     width: 0,
@@ -92,6 +93,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       (typedArray[index++] << 8) |
       typedArray[index++]
     );
+  }
+
+  function readUInt16BE() {
+    return (typedArray[index++] << 8) | typedArray[index++];
   }
 
   function readUInt8() {
@@ -415,8 +420,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseHIST(length: number) {
-    // TODO: implement
-    index += length;
+    const endIndex = index + length;
+    const histogram = [];
+    while (index < endIndex) {
+      histogram.push(readUInt16BE());
+    }
+    metadata.histogram = histogram;
   }
 
   function parsePHYS(length: number) {

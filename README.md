@@ -31,7 +31,7 @@
     - iTXt
   - Miscellaneous information
     - bKGD
-    - hIST❌
+    - hIST
     - pHYs❌
     - sPLT❌
   - Time stamp information
