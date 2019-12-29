@@ -1,7 +1,7 @@
 {
   "name": "@vivaxy/png",
   "version": "1.1.0",
-  "description": "🖼png decoder and encoder",
+  "description": "🖼A browser compatible PNG decoder and encoder.",
   "keywords": [
     "png",
     "vivaxy",
@@ -17,7 +17,9 @@
     "browser-png",
     "png-browser",
     "pngjs",
-    "png-parser"
+    "png-parser",
+    "browser",
+    "node"
   ],
   "main": "lib/index.js",
   "types": "lib/index.d.js",

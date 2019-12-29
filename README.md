@@ -1,5 +1,7 @@
 # png
 
+> 🖼A browser compatible PNG decoder and encoder.
+
 [![Build Status][travis-image]][travis-url]
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Downloads][npm-downloads-image]][npm-url]
