@@ -11,6 +11,7 @@ import decodeIDAT from './decode-idat';
 import rescaleSample from './rescale-sample';
 import { GAMMA_DIVISION } from '../helpers/gamma';
 import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
+import decodeUTF8 from './decode-utf8';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
@@ -57,6 +58,18 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       // Keywords and text strings
       [keyword: string]: string;
     };
+    compressedText?: {
+      // Compressed textual data
+      [keyword: string]: string;
+    };
+    internationalText?: {
+      // International textual data
+      [keyword: string]: {
+        languageTag: string;
+        translatedKeyword: string;
+        text: string;
+      };
+    };
     background?: [number, number, number, number]; // Background color if presented
     data: number[]; // ImageData
   } = {
@@ -85,8 +98,16 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     return typedArray[index++];
   }
 
-  function readStringBeforeNull() {
-    const maxIndex = index + 80;
+  function readBytesBeforeNull() {
+    const results = [];
+    while (typedArray[index] !== 0) {
+      results.push(typedArray[index++]);
+    }
+    return new Uint8Array(results);
+  }
+
+  function readStringBeforeNull(maxLength: number) {
+    const maxIndex = index + maxLength;
     let result = '';
     while (index < maxIndex) {
       const byte = readUInt8();
@@ -110,7 +131,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   function readCompressedData(endIndex: number) {
     const compressedData = typedArray.slice(index, endIndex);
     index = endIndex;
-    return pako.deflate(compressedData);
+    return pako.inflate(compressedData);
   }
 
   function readChunkType() {
@@ -257,7 +278,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   function parseICCP(length: number) {
     // TODO: missing testcase
     const endIndex = index + length;
-    const profileName = readStringBeforeNull();
+    const profileName = readStringBeforeNull(80);
     const compressionMethod = readUInt8();
     if (compressionMethod !== 0) {
       throw new Error(
@@ -304,7 +325,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   function parseTEXT(length: number) {
     const endIndex = index + length;
-    const keyword = readStringBeforeNull();
+    const keyword = readStringBeforeNull(80);
     const value = readStringBeforeEnd(endIndex);
     if (!metadata.text) {
       metadata.text = {};
@@ -313,9 +334,8 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseZTXT(length: number) {
-    // TODO: missing testcase
     const endIndex = index + length;
-    const keyword = readStringBeforeNull();
+    const keyword = readStringBeforeNull(80);
     const compressionMethod = readUInt8();
     if (compressionMethod !== 0) {
       throw new Error(
@@ -327,15 +347,40 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     for (let i = 0; i < data.length; i++) {
       value += String.fromCharCode(data[i]);
     }
-    if (!metadata.text) {
-      metadata.text = {};
+    if (!metadata.compressedText) {
+      metadata.compressedText = {};
     }
-    metadata.text[keyword] = value;
+    metadata.compressedText[keyword] = value;
   }
 
   function parseITXT(length: number) {
-    // TODO: implement
-    index += length;
+    const endIndex = index + length;
+    const keyword = readStringBeforeNull(80);
+    const compressionFlag = readUInt8();
+    const compressionMethod = readUInt8();
+    const languageTag = readStringBeforeNull(Infinity);
+    const translatedKeyword = decodeUTF8(readBytesBeforeNull());
+    let text = '';
+    if (compressionFlag === 0) {
+      text = decodeUTF8(typedArray.slice(index, endIndex));
+      index = endIndex;
+    } else {
+      if (compressionMethod !== 0) {
+        throw new Error(
+          'Unsupported zTXt compression method: ' + compressionMethod,
+        );
+      }
+      const data = readCompressedData(endIndex);
+      text = decodeUTF8(data);
+    }
+    if (!metadata.internationalText) {
+      metadata.internationalText = {};
+    }
+    metadata.internationalText[keyword] = {
+      languageTag,
+      translatedKeyword,
+      text,
+    };
   }
 
   function parseBKGD() {

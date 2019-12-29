@@ -28,7 +28,7 @@
   - Textual information
     - tEXt
     - zTXt
-    - iTXt❌
+    - iTXt
   - Miscellaneous information
     - bKGD
     - hIST❌
