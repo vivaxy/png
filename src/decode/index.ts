@@ -45,6 +45,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         y: number;
       };
     };
+    sRGB?: number; // Standard RGB color space rendering intent
     background?: [number, number, number, number]; // Background color if presented
     data: number[]; // ImageData
   } = {
@@ -101,6 +102,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     tRNS: parseTRNS,
     gAMA: parseGAMA,
     cHRM: parseCHRM,
+    sRGB: parseSRGB,
     bKGD: parseBKGD,
   };
 
@@ -202,6 +204,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         y: readUInt32BE() / CHROMATICITIES_DIVISION,
       },
     };
+  }
+
+  function parseSRGB() {
+    metadata.sRGB = readUInt8();
   }
 
   function parseBKGD() {
