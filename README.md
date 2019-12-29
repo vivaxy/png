@@ -27,7 +27,7 @@
     - sRGB
   - Textual information
     - tEXt
-    - zTXt❌
+    - zTXt
     - iTXt❌
   - Miscellaneous information
     - bKGD

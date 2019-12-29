@@ -107,6 +107,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     return result;
   }
 
+  function readCompressedData(endIndex: number) {
+    const compressedData = typedArray.slice(index, endIndex);
+    index = endIndex;
+    return pako.deflate(compressedData);
+  }
+
   function readChunkType() {
     let name = '';
     for (const end = index + 4; index < end; index++) {
@@ -249,7 +255,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseICCP(length: number) {
-    // TODO: missing test case
+    // TODO: missing testcase
     const endIndex = index + length;
     const profileName = readStringBeforeNull();
     const compressionMethod = readUInt8();
@@ -258,13 +264,11 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         'Unsupported iCCP compression method: ' + compressionMethod,
       );
     }
-    const compressedProfile = typedArray.slice(index, endIndex);
-    const profile = pako.deflate(compressedProfile);
+    const profile = readCompressedData(endIndex);
     metadata.icc = {
       name: profileName,
       profile,
     };
-    index = endIndex;
   }
 
   function parseSBIT() {
@@ -309,8 +313,24 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseZTXT(length: number) {
-    // TODO: implement
-    index += length;
+    // TODO: missing testcase
+    const endIndex = index + length;
+    const keyword = readStringBeforeNull();
+    const compressionMethod = readUInt8();
+    if (compressionMethod !== 0) {
+      throw new Error(
+        'Unsupported zTXt compression method: ' + compressionMethod,
+      );
+    }
+    const data = readCompressedData(endIndex);
+    let value = '';
+    for (let i = 0; i < data.length; i++) {
+      value += String.fromCharCode(data[i]);
+    }
+    if (!metadata.text) {
+      metadata.text = {};
+    }
+    metadata.text[keyword] = value;
   }
 
   function parseITXT(length: number) {
