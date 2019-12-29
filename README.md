@@ -32,7 +32,7 @@
   - Miscellaneous information
     - bKGD
     - hIST
-    - pHYs❌
+    - pHYs
     - sPLT❌
   - Time stamp information
     - tIME❌
@@ -41,7 +41,7 @@
 
 - Greyscale
 - Truecolour
-- Indexed-colour (Palatte)
+- Indexed-colour (Palette)
 - Greyscale with alpha
 - Truecolour with alpha
 

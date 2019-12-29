@@ -78,6 +78,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       pixelPerUnitY: number;
       unit: number;
     };
+    suggestedPalette?: {
+      // Suggested palette
+      name: string;
+      depth: number;
+      palette: [number, number, number, number, number][];
+    };
     data: number[]; // ImageData
   } = {
     width: 0,
@@ -446,8 +452,38 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseSPLT(length: number) {
-    // TODO: implement
-    index += length;
+    const endIndex = index + length;
+    const name = readStringBeforeNull(80);
+    const depth = readUInt8();
+    const palette: [number, number, number, number, number][] = [];
+    if (depth === 8) {
+      while (index < endIndex) {
+        palette.push([
+          readUInt8(),
+          readUInt8(),
+          readUInt8(),
+          readUInt8(),
+          readUInt16BE(),
+        ]);
+      }
+    } else if (depth === 16) {
+      while (index < endIndex) {
+        palette.push([
+          readUInt16BE(),
+          readUInt16BE(),
+          readUInt16BE(),
+          readUInt16BE(),
+          readUInt16BE(),
+        ]);
+      }
+    } else {
+      throw new Error('Unsupported sPLT depth: ' + depth);
+    }
+    metadata.suggestedPalette = {
+      name,
+      depth,
+      palette: palette,
+    };
   }
 
   function parseTIME(length: number) {
