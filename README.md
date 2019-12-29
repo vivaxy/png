@@ -26,7 +26,7 @@
     - sBIT
     - sRGB
   - Textual information
-    - tEXt❌
+    - tEXt
     - zTXt❌
     - iTXt❌
   - Miscellaneous information

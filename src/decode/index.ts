@@ -53,6 +53,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     };
     significantBits?: [number, number, number, number]; // Significant bits
     sRGB?: number; // Standard RGB color space rendering intent
+    text?: {
+      // Keywords and text strings
+      [keyword: string]: string;
+    };
     background?: [number, number, number, number]; // Background color if presented
     data: number[]; // ImageData
   } = {
@@ -79,6 +83,28 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   function readUInt8() {
     return typedArray[index++];
+  }
+
+  function readStringBeforeNull() {
+    const maxIndex = index + 80;
+    let result = '';
+    while (index < maxIndex) {
+      const byte = readUInt8();
+      if (byte === 0) {
+        break;
+      }
+      result += String.fromCharCode(byte);
+    }
+    return result;
+  }
+
+  function readStringBeforeEnd(endIndex: number) {
+    let result = '';
+    while (index < endIndex) {
+      const byte = readUInt8();
+      result += String.fromCharCode(byte);
+    }
+    return result;
   }
 
   function readChunkType() {
@@ -225,14 +251,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   function parseICCP(length: number) {
     // TODO: missing test case
     const endIndex = index + length;
-    let profileName = '';
-    while (profileName.length < 80) {
-      const byte = readUInt8();
-      if (byte === 0) {
-        break;
-      }
-      profileName += String.fromCharCode(byte);
-    }
+    const profileName = readStringBeforeNull();
     const compressionMethod = readUInt8();
     if (compressionMethod !== 0) {
       throw new Error(
@@ -280,8 +299,13 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseTEXT(length: number) {
-    // TODO: implement
-    index += length;
+    const endIndex = index + length;
+    const keyword = readStringBeforeNull();
+    const value = readStringBeforeEnd(endIndex);
+    if (!metadata.text) {
+      metadata.text = {};
+    }
+    metadata.text[keyword] = value;
   }
 
   function parseZTXT(length: number) {
