@@ -2,6 +2,7 @@
  * @since 2019-10-30 03:00
  * @author vivaxy
  */
+import * as pako from 'pako';
 import crc32 from '../helpers/crc32';
 import PNG_SIGNATURE from '../helpers/signature';
 import { COLOR_TYPES } from '../helpers/color-types';
@@ -25,7 +26,6 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     filter: number; // Filter method; always be 0
     palette?: [number, number, number, number][]; // Palette if presented
     transparent?: [number, number, number, number]; // Transparent color if presented
-    gamma?: number; // Image gamma
     chromaticities?: {
       // Primary chromaticities
       white: {
@@ -44,6 +44,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         x: number;
         y: number;
       };
+    };
+    gamma?: number; // Image gamma
+    icc?: {
+      // Embedded ICC profile
+      name: string;
+      profile: Uint8Array;
     };
     sRGB?: number; // Standard RGB color space rendering intent
     background?: [number, number, number, number]; // Background color if presented
@@ -100,10 +106,19 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     IDAT: parseIDAT,
     IEND: parseIEND,
     tRNS: parseTRNS,
-    gAMA: parseGAMA,
     cHRM: parseCHRM,
+    gAMA: parseGAMA,
+    iCCP: parseICCP,
+    sBIT: parseSBIT,
     sRGB: parseSRGB,
+    tEXt: parseTEXT,
+    zTXt: parseZTXT,
+    iTXt: parseITXT,
     bKGD: parseBKGD,
+    hIST: parseHIST,
+    pHYs: parsePHYS,
+    sPLT: parseSPLT,
+    tIME: parseTIME,
   };
 
   function parseIHDR() {
@@ -181,10 +196,6 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     }
   }
 
-  function parseGAMA() {
-    metadata.gamma = readUInt32BE() / GAMMA_DIVISION;
-  }
-
   function parseCHRM() {
     metadata.chromaticities = {
       white: {
@@ -206,8 +217,58 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     };
   }
 
+  function parseGAMA() {
+    metadata.gamma = readUInt32BE() / GAMMA_DIVISION;
+  }
+
+  function parseICCP(length: number) {
+    // TODO: missing test case
+    const endIndex = index + length;
+    let profileName = '';
+    while (profileName.length < 80) {
+      const byte = readUInt8();
+      if (byte === 0) {
+        break;
+      }
+      profileName += String.fromCharCode(byte);
+    }
+    const compressionMethod = readUInt8();
+    if (compressionMethod !== 0) {
+      throw new Error(
+        'Unsupported iCCP compression method: ' + compressionMethod,
+      );
+    }
+    const compressedProfile = typedArray.slice(index, endIndex);
+    const profile = pako.deflate(compressedProfile);
+    metadata.icc = {
+      name: profileName,
+      profile,
+    };
+    index = endIndex;
+  }
+
+  function parseSBIT(length: number) {
+    // TODO: implement
+    index += length;
+  }
+
   function parseSRGB() {
     metadata.sRGB = readUInt8();
+  }
+
+  function parseTEXT(length: number) {
+    // TODO: implement
+    index += length;
+  }
+
+  function parseZTXT(length: number) {
+    // TODO: implement
+    index += length;
+  }
+
+  function parseITXT(length: number) {
+    // TODO: implement
+    index += length;
   }
 
   function parseBKGD() {
@@ -239,6 +300,26 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       }
       metadata.background = metadata.palette[typedArray[index++]];
     }
+  }
+
+  function parseHIST(length: number) {
+    // TODO: implement
+    index += length;
+  }
+
+  function parsePHYS(length: number) {
+    // TODO: implement
+    index += length;
+  }
+
+  function parseSPLT(length: number) {
+    // TODO: implement
+    index += length;
+  }
+
+  function parseTIME(length: number) {
+    // TODO: implement
+    index += length;
   }
 
   function parseChunkBegin() {

@@ -7,6 +7,60 @@
 [![Standard Version][standard-version-image]][standard-version-url]
 [![Codecov][codecov-image]][codecov-url]
 
+# Support
+
+## Chunks
+
+- Critical
+  - IHDR
+  - PLTE
+  - IDAT
+  - IEND
+- Ancillary
+  - Transparency information
+    - tRNS
+  - Colour space information
+    - cHRM
+    - gAMA
+    - iCCP
+    - sBIT❌
+    - sRGB
+  - Textual information
+    - tEXt❌
+    - zTXt❌
+    - iTXt❌
+  - Miscellaneous information
+    - bKGD
+    - hIST❌
+    - pHYs❌
+    - sPLT❌
+  - Time stamp information
+    - tIME❌
+
+## Color Type
+
+- Greyscale
+- Truecolour
+- Indexed-colour (Palatte)
+- Greyscale with alpha
+- Truecolour with alpha
+
+## Bit Depth
+
+- 1
+- 2
+- 4
+- 8
+- 16
+
+## Filter
+
+- None
+- Sub
+- Up
+- Average
+- Paeth
+
 # Install
 
 `yarn add @vivaxy/png` or `npm i @vivaxy/png`
