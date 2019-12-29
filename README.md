@@ -23,7 +23,7 @@
     - cHRM
     - gAMA
     - iCCP
-    - sBIT❌
+    - sBIT
     - sRGB
   - Textual information
     - tEXt❌

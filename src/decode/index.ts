@@ -51,6 +51,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       name: string;
       profile: Uint8Array;
     };
+    significantBits?: [number, number, number, number]; // Significant bits
     sRGB?: number; // Standard RGB color space rendering intent
     background?: [number, number, number, number]; // Background color if presented
     data: number[]; // ImageData
@@ -247,9 +248,31 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     index = endIndex;
   }
 
-  function parseSBIT(length: number) {
-    // TODO: implement
-    index += length;
+  function parseSBIT() {
+    if (metadata.colorType === COLOR_TYPES.GRAYSCALE) {
+      const sBit = readUInt8();
+      metadata.significantBits = [sBit, sBit, sBit, metadata.depth];
+    } else if (
+      metadata.colorType === COLOR_TYPES.TRUE_COLOR ||
+      metadata.colorType === COLOR_TYPES.PALETTE
+    ) {
+      metadata.significantBits = [
+        readUInt8(),
+        readUInt8(),
+        readUInt8(),
+        metadata.depth,
+      ];
+    } else if (metadata.colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
+      const sBit = readUInt8();
+      metadata.significantBits = [sBit, sBit, sBit, readUInt8()];
+    } else if (metadata.colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
+      metadata.significantBits = [
+        readUInt8(),
+        readUInt8(),
+        readUInt8(),
+        readUInt8(),
+      ];
+    }
   }
 
   function parseSRGB() {

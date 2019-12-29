@@ -296,7 +296,7 @@ export default function decodeIDAT(
           }
           return palette[paletteIndex];
         }
-        if (colorType === COLOR_TYPES.GRAYSCALE_WITH_APLHA) {
+        if (colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
           const color = rescaleSample(channels[channelIndex++], depth);
           return [
             color,
@@ -305,7 +305,7 @@ export default function decodeIDAT(
             rescaleSample(channels[channelIndex++], depth),
           ];
         }
-        if (colorType === COLOR_TYPES.TRUE_COLOR_WITH_APLHA) {
+        if (colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
           return [
             rescaleSample(channels[channelIndex++], depth),
             rescaleSample(channels[channelIndex++], depth),
