@@ -2,6 +2,24 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.1.0](https://github.com/vivaxy/png/compare/v1.0.0...v1.1.0) (2019-12-29)
+
+
+### Features
+
+* **decode:** :sparkles: support cHRM ([6735885](https://github.com/vivaxy/png/commit/6735885221037b3d530f78d6ad9eaf545847fb77))
+* **decode:** :sparkles: support gAMA ([33b7385](https://github.com/vivaxy/png/commit/33b7385065970340afe78d539451527c812a628a))
+* **decode:** :sparkles: support hIST ([4d78118](https://github.com/vivaxy/png/commit/4d781183f943c3a685bb7aac780772c0054b2d67))
+* **decode:** :sparkles: support iCCP ([99ee169](https://github.com/vivaxy/png/commit/99ee169270ef5ccd427f5a7e0b3f42480e162f12))
+* **decode:** :sparkles: support iTXt ([6b867cc](https://github.com/vivaxy/png/commit/6b867ccdc3ead3c54432ab85be48deb857b301ba))
+* **decode:** :sparkles: support pHYs ([7b0bf80](https://github.com/vivaxy/png/commit/7b0bf802fbe863d608180ed4633ea257573db8bb))
+* **decode:** :sparkles: support sBIT ([5cef76d](https://github.com/vivaxy/png/commit/5cef76d14c731c2625b4972d0444a07dd8f6284b))
+* **decode:** :sparkles: support sPLT ([c58a478](https://github.com/vivaxy/png/commit/c58a47840b23a9bb7f18c4f3885c2746c38a045a))
+* **decode:** :sparkles: support sRGB ([77edb37](https://github.com/vivaxy/png/commit/77edb37215c0dc72f31377c2a6ef7585fa405504))
+* **decode:** :sparkles: support tEXt ([e0f49b6](https://github.com/vivaxy/png/commit/e0f49b6109eabd8a42e69af742cc2a805bfd6106))
+* **decode:** :sparkles: support tIME ([fc6df50](https://github.com/vivaxy/png/commit/fc6df50f6754c1776257a4e6287d4c360167c359))
+* **decode:** :sparkles: support zTXt ([2a348fe](https://github.com/vivaxy/png/commit/2a348fea892b727048f08072242c1e51229ac58e))
+
 ## [1.0.0](https://github.com/vivaxy/png/compare/v0.0.1...v1.0.0) (2019-12-28)
 
 
