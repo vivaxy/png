@@ -33,9 +33,9 @@
     - bKGD
     - hIST
     - pHYs
-    - sPLT❌
+    - sPLT
   - Time stamp information
-    - tIME❌
+    - tIME
 
 ## Color Type
 

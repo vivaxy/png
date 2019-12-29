@@ -84,6 +84,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       depth: number;
       palette: [number, number, number, number, number][];
     };
+    lastModificationTime?: number; // Image last-modification time (UTC)
     data: number[]; // ImageData
   } = {
     width: 0,
@@ -486,9 +487,21 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     };
   }
 
-  function parseTIME(length: number) {
-    // TODO: implement
-    index += length;
+  function parseTIME() {
+    const year = readUInt16BE();
+    const month = readUInt8();
+    const day = readUInt8();
+    const hour = readUInt8();
+    const minute = readUInt8();
+    const second = readUInt8();
+    metadata.lastModificationTime = Date.UTC(
+      year,
+      month,
+      day,
+      hour,
+      minute,
+      second,
+    );
   }
 
   function parseChunkBegin() {
