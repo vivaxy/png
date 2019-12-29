@@ -7,7 +7,7 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Features
 
-* **decode:** :sparkles: crc32 and parse IEND ([43f52a4](https://github.com/vivaxy/png/commit/43f52a4b697aab48d9f16bdac09b74a610aef1e1))
+* **decode:** :sparkles: support crc32 and parse IEND ([43f52a4](https://github.com/vivaxy/png/commit/43f52a4b697aab48d9f16bdac09b74a610aef1e1))
 * **decode:** :sparkles: support bit depth 1 ([b218092](https://github.com/vivaxy/png/commit/b218092fea37a0131623f2d69f5dface565bf5ca))
 * **decode:** :sparkles: support bit depth 1 ([#2](https://github.com/vivaxy/png/issues/2)) ([7016d2d](https://github.com/vivaxy/png/commit/7016d2db2f7cda6badadf26c500cf1f4ca2ebaf6))
 * **decode:** :sparkles: support bit depth 16, filter 1, filter 2 and re ([25e5793](https://github.com/vivaxy/png/commit/25e5793cb9c5dae83fcbdd95a71daefbba5da7f0))
@@ -26,8 +26,8 @@ All notable changes to this project will be documented in this file. See [standa
 
 ### Features
 
-* **decode:** :sparkles: ([bb4a263](https://github.com/vivaxy/png/commit/bb4a2637539c44335e82cd067774aac50bec4d74))
+* **decode:** :sparkles: implement parser ([bb4a263](https://github.com/vivaxy/png/commit/bb4a2637539c44335e82cd067774aac50bec4d74))
 * **decode:** :sparkles: support colorType 3 and depth 2 ([1eebacd](https://github.com/vivaxy/png/commit/1eebacd0e96ae27a72caeefe2090b6c293316b15))
-* **init:** :sparkles: ([6f2afb4](https://github.com/vivaxy/png/commit/6f2afb47c53ee69a2a6cc4e7178b74d5fe2a102f))
-* **parse idat:** :sparkles: ([71041b4](https://github.com/vivaxy/png/commit/71041b4c675a72735849082c570d0ef7f32937a1))
-* **png:** :sparkles: implement parsers ([98fa580](https://github.com/vivaxy/png/commit/98fa5804196ba57dbdcdda14e548fd744f28ec8d))
+* **init:** :sparkles: init project ([6f2afb4](https://github.com/vivaxy/png/commit/6f2afb47c53ee69a2a6cc4e7178b74d5fe2a102f))
+* **decode:** :sparkles: support chunk IDAT ([71041b4](https://github.com/vivaxy/png/commit/71041b4c675a72735849082c570d0ef7f32937a1))
+* **decode:** :sparkles: implement parser ([98fa580](https://github.com/vivaxy/png/commit/98fa5804196ba57dbdcdda14e548fd744f28ec8d))
