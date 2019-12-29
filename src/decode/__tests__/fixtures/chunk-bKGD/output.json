@@ -7,6 +7,7 @@
   "interlace": 0,
   "filter": 0,
   "background": [255, 255, 0, 255],
+  "gamma": 1,
   "data": [
     255,
     255,

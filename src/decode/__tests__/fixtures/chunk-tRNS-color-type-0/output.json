@@ -6,6 +6,7 @@
   "compression": 0,
   "interlace": 0,
   "filter": 0,
+  "gamma": 1,
   "data": [
     255,
     255,

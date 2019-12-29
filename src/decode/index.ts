@@ -8,6 +8,7 @@ import { COLOR_TYPES } from '../helpers/color-types';
 import { concatUint8Array } from '../helpers/typed-array';
 import decodeIDAT from './decode-idat';
 import rescaleSample from './rescale-sample';
+import { GAMMA_DIVISION } from '../helpers/gamma';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
@@ -24,6 +25,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     palette?: [number, number, number, number][]; // palette if presented
     background?: [number, number, number, number]; // background color if presented
     transparent?: [number, number, number, number]; // transparent color if presented
+    gamma?: number; // Image gamma
     data: number[]; // ImageData
   } = {
     width: 0,
@@ -78,6 +80,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     IEND: parseIEND,
     tRNS: parseTRNS,
     bKGD: parseBKGD,
+    gAMA: parseGAMA,
   };
 
   function parseIHDR(startIndex: number, length: number) {
@@ -192,6 +195,12 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       }
       metadata.background = metadata.palette[typedArray[index++]];
     }
+
+    parseChunkEnd(startIndex, length);
+  }
+
+  function parseGAMA(startIndex: number, length: number) {
+    metadata.gamma = readUInt32BE() / GAMMA_DIVISION;
 
     parseChunkEnd(startIndex, length);
   }
