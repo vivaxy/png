@@ -1,6 +1,7 @@
 # png
 
 > 🖼A browser compatible PNG decoder and encoder.
+> Also supports Node.js.
 
 [![Build Status][travis-image]][travis-url]
 [![NPM Version][npm-version-image]][npm-url]
@@ -73,9 +74,10 @@
 import png from '@vivaxy/png';
 
 const metadata = png.decode(imageBuffer);
+const imageBuffer = png.encode(metadata);
 ```
 
-See `metadata` type in [source code](src/decode/index.ts).
+See `metadata` type definition in [metadata.ts](src/helpers/metadata.ts).
 
 #
 

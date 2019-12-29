@@ -3,90 +3,23 @@
  * @author vivaxy
  */
 import * as pako from 'pako';
+
 import crc32 from '../helpers/crc32';
+import decodeIDAT from './decode-idat';
+import decodeUTF8 from './decode-utf8';
+import Metadata from '../helpers/metadata';
+import rescaleSample from './rescale-sample';
 import PNG_SIGNATURE from '../helpers/signature';
+import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
 import { concatUint8Array } from '../helpers/typed-array';
-import decodeIDAT from './decode-idat';
-import rescaleSample from './rescale-sample';
-import { GAMMA_DIVISION } from '../helpers/gamma';
 import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
-import decodeUTF8 from './decode-utf8';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
   const typedArray = new Uint8Array(arrayBuffer);
   let idatUint8Array = new Uint8Array();
 
-  const metadata: {
-    width: number; // Image width
-    height: number; // Image height
-    depth: number; // Bit depth; depth per channel
-    colorType: COLOR_TYPES; // Color type as grayscale, true color, palette or with alpha
-    compression: number; // Compression method; always be 0
-    interlace: number; // Interlaced
-    filter: number; // Filter method; always be 0
-    palette?: [number, number, number, number][]; // Palette if presented
-    transparent?: [number, number, number, number]; // Transparent color if presented
-    chromaticities?: {
-      // Primary chromaticities
-      white: {
-        x: number;
-        y: number;
-      };
-      red: {
-        x: number;
-        y: number;
-      };
-      green: {
-        x: number;
-        y: number;
-      };
-      blue: {
-        x: number;
-        y: number;
-      };
-    };
-    gamma?: number; // Image gamma
-    icc?: {
-      // Embedded ICC profile
-      name: string;
-      profile: Uint8Array;
-    };
-    significantBits?: [number, number, number, number]; // Significant bits
-    sRGB?: number; // Standard RGB color space rendering intent
-    text?: {
-      // Keywords and text strings
-      [keyword: string]: string;
-    };
-    compressedText?: {
-      // Compressed textual data
-      [keyword: string]: string;
-    };
-    internationalText?: {
-      // International textual data
-      [keyword: string]: {
-        languageTag: string;
-        translatedKeyword: string;
-        text: string;
-      };
-    };
-    background?: [number, number, number, number]; // Background color if presented
-    histogram?: number[]; // Image histogram
-    physicalDimensions?: {
-      // Physical pixel dimensions
-      pixelPerUnitX: number;
-      pixelPerUnitY: number;
-      unit: number;
-    };
-    suggestedPalette?: {
-      // Suggested palette
-      name: string;
-      depth: number;
-      palette: [number, number, number, number, number][];
-    };
-    lastModificationTime?: number; // Image last-modification time (UTC)
-    data: number[]; // ImageData
-  } = {
+  const metadata: Metadata = {
     width: 0,
     height: 0,
     depth: 0,
@@ -264,7 +197,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         metadata.palette[i][3] = typedArray[index++];
       }
     } else {
-      throw new Error('Prohibited tRNS for colorType ' + metadata.colorType);
+      // throw new Error('Prohibited tRNS for colorType ' + metadata.colorType);
     }
   }
 
@@ -299,9 +232,9 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     const profileName = readStringBeforeNull(80);
     const compressionMethod = readUInt8();
     if (compressionMethod !== 0) {
-      throw new Error(
-        'Unsupported iCCP compression method: ' + compressionMethod,
-      );
+      // throw new Error(
+      //   'Unsupported iCCP compression method: ' + compressionMethod,
+      // );
     }
     const profile = readCompressedData(endIndex);
     metadata.icc = {
@@ -356,9 +289,9 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     const keyword = readStringBeforeNull(80);
     const compressionMethod = readUInt8();
     if (compressionMethod !== 0) {
-      throw new Error(
-        'Unsupported zTXt compression method: ' + compressionMethod,
-      );
+      // throw new Error(
+      //   'Unsupported zTXt compression method: ' + compressionMethod,
+      // );
     }
     const data = readCompressedData(endIndex);
     let value = '';
@@ -384,9 +317,9 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       index = endIndex;
     } else {
       if (compressionMethod !== 0) {
-        throw new Error(
-          'Unsupported zTXt compression method: ' + compressionMethod,
-        );
+        // throw new Error(
+        //   'Unsupported iTXt compression method: ' + compressionMethod,
+        // );
       }
       const data = readCompressedData(endIndex);
       text = decodeUTF8(data);
@@ -478,7 +411,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         ]);
       }
     } else {
-      throw new Error('Unsupported sPLT depth: ' + depth);
+      // throw new Error('Unsupported sPLT depth: ' + depth);
     }
     metadata.suggestedPalette = {
       name,
@@ -512,10 +445,10 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     if (chunkHandlers[type]) {
       chunkHandlers[type](length);
     } else {
-      // const ancillary = Boolean(type.charCodeAt(0) & 0x20); // or critical
-      // if (!ancillary) {
-      //   throw new Error('Unsupported critical chunk type: ' + type);
-      // }
+      const ancillary = Boolean(type.charCodeAt(0) & 0x20); // or critical
+      if (!ancillary) {
+        // throw new Error('Unsupported critical chunk type: ' + type);
+      }
       // Skip chunk
       index += length;
     }
