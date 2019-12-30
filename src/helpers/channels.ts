@@ -56,15 +56,20 @@ export function channelToTypedArray(
   for (let i = 0; i < channels.length; i++) {
     if (depth === 1) {
       typedArray[typedArrayIndex++] =
-        ((channels[i++] << 7) & 1) |
-        ((channels[i++] << 6) & 1) |
-        ((channels[i++] << 5) & 1) |
-        ((channels[i++] << 4) & 1) |
-        ((channels[i++] << 3) & 1) |
-        ((channels[i++] << 2) & 1) |
-        ((channels[i++] << 1) & 1) |
+        ((channels[i++] & 1) << 7) |
+        ((channels[i++] & 1) << 6) |
+        ((channels[i++] & 1) << 5) |
+        ((channels[i++] & 1) << 4) |
+        ((channels[i++] & 1) << 3) |
+        ((channels[i++] & 1) << 2) |
+        ((channels[i++] & 1) << 1) |
         (channels[i++] & 1);
     } else if (depth === 2) {
+      typedArray[typedArrayIndex++] =
+        ((channels[i++] & 3) << 6) |
+        ((channels[i++] & 3) << 4) |
+        ((channels[i++] & 3) << 2) |
+        (channels[i++] & 3);
     } else if (depth === 4) {
     } else if (depth === 8) {
     } else if (depth === 16) {

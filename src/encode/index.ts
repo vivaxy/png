@@ -6,6 +6,7 @@ import crc32 from '../helpers/crc32';
 import encodeIDAT from './encode-idat';
 import Metadata from '../helpers/metadata';
 import PNG_SIGNATURE from '../helpers/signature';
+import { COLOR_TYPES } from '../helpers/color-types';
 import { concatUInt8Array } from '../helpers/typed-array';
 
 export default function encode(metadata: Metadata) {
@@ -71,17 +72,14 @@ export default function encode(metadata: Metadata) {
   }
 
   function packPLTE() {
-    let data = new Uint8Array();
+    const data = [];
     if (metadata.palette) {
       for (let i = 0; i < metadata.palette.length; i++) {
         const palette = metadata.palette[i];
-        data = concatUInt8Array(
-          data,
-          new Uint8Array([palette[0], palette[1], palette[2]]),
-        );
+        data.push(palette[0], palette[1], palette[2]);
       }
     }
-    return data;
+    return new Uint8Array(data);
   }
 
   function packIDAT() {
@@ -100,7 +98,24 @@ export default function encode(metadata: Metadata) {
   }
 
   function packTRNS() {
-    return new Uint8Array();
+    const data = [];
+    if (metadata.colorType === COLOR_TYPES.PALETTE) {
+      if (!metadata.palette) {
+        throw new Error('Palette is required');
+      }
+      const { palette } = metadata;
+      let transparent = false;
+      for (let i = 0; i < palette.length; i++) {
+        data.push(palette[i][3]);
+        if (palette[i][3] !== 0xff) {
+          transparent = true;
+        }
+      }
+      if (!transparent) {
+        return new Uint8Array();
+      }
+    }
+    return new Uint8Array(data);
   }
 
   function packCHRM() {
