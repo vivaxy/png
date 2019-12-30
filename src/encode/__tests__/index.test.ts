@@ -13,47 +13,48 @@ jest.setTimeout(10e3);
 const fixturesPath = path.join(__dirname, '..', '..', '__tests__', 'fixtures');
 
 test('encode', async function() {
-  // const testcaseNames = (await glob('*', {
-  //   cwd: fixturesPath,
-  //   onlyDirectories: true,
-  // })).filter(function (testcaseName) {
-  //   return ![
-  //     'bit-depth-16',
-  //     'chunk-bKGD',
-  //     'chunk-cHRM',
-  //     'chunk-gMMA',
-  //     'chunk-hIST',
-  //     'chunk-IDAT-multiple',
-  //     'chunk-IDAT-single',
-  //     'chunk-IEND',
-  //     'chunk-IHDR',
-  //     'chunk-iTXt',
-  //     'chunk-pHYs',
-  //     'chunk-PLTE',
-  //     'chunk-sBIT',
-  //     'chunk-sPLT',
-  //     'chunk-sRGB',
-  //     'chunk-tEXt',
-  //     'chunk-tIME',
-  //     'chunk-tRNS-color-type-0',
-  //     'chunk-tRNS-color-type-2',
-  //     'chunk-tRNS-color-type-3',
-  //     'chunk-zTXt',
-  //     'color-type-0',
-  //     'color-type-2',
-  //     'color-type-3',
-  //     'color-type-4',
-  //     'color-type-6',
-  //     'filter-0',
-  //     'filter-1',
-  //     'filter-2',
-  //     'filter-3',
-  //     'filter-4',
-  //     'interlace-8x-size',
-  //     'interlace-odd-size'
-  //   ].includes(testcaseName);
-  // });
-  const testcaseNames = ['bit-depth-04'];
+  const testcaseNames = (await glob('*', {
+    cwd: fixturesPath,
+    onlyDirectories: true,
+  })).filter(function(testcaseName) {
+    return ![
+      'filter-1',
+      'filter-2',
+      'filter-3',
+      'filter-4',
+      'bit-depth-04',
+      'bit-depth-08',
+      'bit-depth-16',
+      'chunk-bKGD',
+      'chunk-cHRM',
+      'chunk-gMMA',
+      'chunk-hIST',
+      'chunk-IDAT-multiple',
+      'chunk-IDAT-single',
+      'chunk-IEND',
+      'chunk-IHDR',
+      'chunk-iTXt',
+      'chunk-pHYs',
+      'chunk-PLTE',
+      'chunk-sBIT',
+      'chunk-sPLT',
+      'chunk-sRGB',
+      'chunk-tEXt',
+      'chunk-tIME',
+      'chunk-tRNS-color-type-0',
+      'chunk-tRNS-color-type-2',
+      'chunk-tRNS-color-type-3',
+      'chunk-zTXt',
+      'color-type-0',
+      'color-type-2',
+      'color-type-3',
+      'color-type-4',
+      'color-type-6',
+      'interlace-8x-size',
+      'interlace-odd-size',
+    ].includes(testcaseName);
+  });
+  // const testcaseNames = ['bit-depth-04'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
