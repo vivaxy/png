@@ -47,12 +47,16 @@ test('encode', async function() {
         'expected.json',
       );
       const metadata = require(metadataPath);
-      const expectedBuffer = await fse.readFile(expectedOutputPath);
+      const expectedBuffer = new Uint8Array(
+        await fse.readFile(expectedOutputPath),
+      );
       let encodedBuffer = new Uint8Array();
       try {
         encodedBuffer = encode(metadata);
       } catch (ex) {
-        console.error(testcaseName + ' failed with error: ' + ex.stack);
+        console.error(
+          testcaseName + ' failed with error: ' + (ex.stack || ex.message),
+        );
         expect(false).toBe(true);
       }
       try {

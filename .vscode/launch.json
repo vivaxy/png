@@ -7,10 +7,20 @@
     {
       "type": "node",
       "request": "launch",
-      "name": "test",
+      "name": "test decode",
       "skipFiles": ["<node_internals>/**"],
       "program": "${workspaceFolder}/node_modules/.bin/jest",
-      "console": "integratedTerminal"
+      "console": "integratedTerminal",
+      "args": ["src/decode/__tests__/index.test.ts"]
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "test encode",
+      "skipFiles": ["<node_internals>/**"],
+      "program": "${workspaceFolder}/node_modules/.bin/jest",
+      "console": "integratedTerminal",
+      "args": ["src/encode/__tests__/index.test.ts"]
     }
   ]
 }

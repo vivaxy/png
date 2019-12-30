@@ -54,9 +54,16 @@ export function channelToTypedArray(
   const typedArray = new Uint8Array(scanlineWidth);
   let typedArrayIndex = 0;
   for (let i = 0; i < channels.length; i++) {
-    const channel = channels[i];
     if (depth === 1) {
-      typedArray[typedArrayIndex++] = channel & 1;
+      typedArray[typedArrayIndex++] =
+        ((channels[i++] << 7) & 1) |
+        ((channels[i++] << 6) & 1) |
+        ((channels[i++] << 5) & 1) |
+        ((channels[i++] << 4) & 1) |
+        ((channels[i++] << 3) & 1) |
+        ((channels[i++] << 2) & 1) |
+        ((channels[i++] << 1) & 1) |
+        (channels[i++] & 1);
     } else if (depth === 2) {
     } else if (depth === 4) {
     } else if (depth === 8) {

@@ -2,13 +2,14 @@
  * @since 2019-12-30 01:47
  * @author vivaxy
  */
+import * as pako from 'pako';
 import { concatUInt8Array } from '../helpers/typed-array';
+import { channelToTypedArray } from '../helpers/channels';
+import { filters, FILTER_TYPES } from '../helpers/filters';
 import {
   COLOR_TYPES,
   COLOR_TYPES_TO_CHANNEL_PER_PIXEL,
 } from '../helpers/color-types';
-import { channelToTypedArray } from '../helpers/channels';
-import { filters, FILTER_TYPES } from '../helpers/filters';
 
 export default function encodeIDAT(
   data: number[],
@@ -92,5 +93,5 @@ export default function encodeIDAT(
       concatUInt8Array(new Uint8Array([filterType]), filteredLine),
     );
   }
-  return typedArray;
+  return pako.deflate(typedArray);
 }

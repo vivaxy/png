@@ -39,23 +39,23 @@ export default function encode(metadata: Metadata) {
     [chunkName: string]: () => Uint8Array;
   } = {
     IHDR: packIHDR,
-    PLTE: packPLTE,
-    IDAT: packIDAT,
-    IEND: packIEND,
-    tRNS: packTRNS,
-    cHRM: packCHRM,
-    gAMA: packGAMA,
-    iCCP: packICCP,
-    sBIT: packSBIT,
-    sRGB: packSRGB,
-    tEXt: packTEXT,
+    tIME: packTIME,
     zTXt: packZTXT,
+    tEXt: packTEXT,
     iTXt: packITXT,
-    bKGD: packBKGD,
-    hIST: packHIST,
+    sRGB: packSRGB,
     pHYs: packPHYS,
     sPLT: packSPLT,
-    tIME: packTIME,
+    iCCP: packICCP,
+    sBIT: packSBIT,
+    gAMA: packGAMA,
+    cHRM: packCHRM,
+    PLTE: packPLTE,
+    tRNS: packTRNS,
+    hIST: packHIST,
+    bKGD: packBKGD,
+    IDAT: packIDAT,
+    IEND: packIEND,
   };
 
   function packIHDR() {
@@ -144,7 +144,22 @@ export default function encode(metadata: Metadata) {
     return new Uint8Array();
   }
   function packPHYS() {
-    return new Uint8Array();
+    let data = new Uint8Array();
+    if (metadata.physicalDimensions) {
+      data = concatUInt8Array(
+        data,
+        packUInt32BE(metadata.physicalDimensions.pixelPerUnitX),
+      );
+      data = concatUInt8Array(
+        data,
+        packUInt32BE(metadata.physicalDimensions.pixelPerUnitY),
+      );
+      data = concatUInt8Array(
+        data,
+        packUInt8(metadata.physicalDimensions.unit),
+      );
+    }
+    return data;
   }
   function packSPLT() {
     return new Uint8Array();
@@ -154,18 +169,20 @@ export default function encode(metadata: Metadata) {
   }
 
   Object.keys(chunkPackers).forEach(function(chunkName) {
-    const nameData = packChunkName(chunkName);
     const data = chunkPackers[chunkName]();
-    const lengthData = packUInt32BE(data.length);
-    const typeAndData = concatUInt8Array(nameData, data);
-    const calculatedCrc32 = crc32(typeAndData);
-    const endData = packUInt32BE(calculatedCrc32);
+    if (data.length > 0 || chunkName === 'IEND') {
+      const nameData = packChunkName(chunkName);
+      const lengthData = packUInt32BE(data.length);
+      const typeAndData = concatUInt8Array(nameData, data);
+      const calculatedCrc32 = crc32(typeAndData);
+      const endData = packUInt32BE(calculatedCrc32);
 
-    const chunkData = concatUInt8Array(
-      concatUInt8Array(lengthData, typeAndData),
-      endData,
-    );
-    typedArray = concatUInt8Array(typedArray, chunkData);
+      const chunkData = concatUInt8Array(
+        concatUInt8Array(lengthData, typeAndData),
+        endData,
+      );
+      typedArray = concatUInt8Array(typedArray, chunkData);
+    }
   });
 
   return typedArray;

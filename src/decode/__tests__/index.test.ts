@@ -17,7 +17,7 @@ test('decode', async function() {
     cwd: fixturesPath,
     onlyDirectories: true,
   });
-  // const testcaseNames = ['chunk-tRNS-color-type-0'];
+  // const testcaseNames = ['bit-depth-01'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
