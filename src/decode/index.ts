@@ -93,7 +93,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     return name;
   }
 
-  // 1. Signature
+  // Signature
   for (; index < PNG_SIGNATURE.length; index++) {
     if (typedArray[index] !== PNG_SIGNATURE[index]) {
       throw new Error(
@@ -102,7 +102,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     }
   }
 
-  // 2. Chunks
+  // Chunks
   const chunkHandlers: {
     [key: string]: (length: number) => void;
   } = {
@@ -476,7 +476,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   parseChunkBegin();
 
-  // 3. Decode all IDAT
+  // Decode all IDAT
   metadata.data = decodeIDAT(
     idatUint8Array,
     metadata.interlace,
