@@ -1,7 +1,6 @@
 # png
 
 > 🖼A browser compatible PNG decoder and encoder.
-> Also supports Node.js.
 
 [![Build Status][travis-image]][travis-url]
 [![NPM Version][npm-version-image]][npm-url]
@@ -10,59 +9,13 @@
 [![Standard Version][standard-version-image]][standard-version-url]
 [![Codecov][codecov-image]][codecov-url]
 
-# Support
+# Supports
 
-## Chunks
-
-- Critical
-  - IHDR
-  - PLTE
-  - IDAT
-  - IEND
-- Ancillary
-  - Transparency information
-    - tRNS
-  - Colour space information
-    - cHRM
-    - gAMA
-    - iCCP
-    - sBIT
-    - sRGB
-  - Textual information
-    - tEXt
-    - zTXt
-    - iTXt
-  - Miscellaneous information
-    - bKGD
-    - hIST
-    - pHYs
-    - sPLT
-  - Time stamp information
-    - tIME
-
-## Color Type
-
-- Greyscale
-- Truecolour
-- Indexed-colour (Palette)
-- Greyscale with alpha
-- Truecolour with alpha
-
-## Bit Depth
-
-- 1
-- 2
-- 4
-- 8
-- 16
-
-## Filter
-
-- None
-- Sub
-- Up
-- Average
-- Paeth
+- Environments: Browsers and Node.js
+- Chunks: IHDR, PLTE, IDAT, IEND, tRNS, cHRM, gAMA, iCCP, sBIT, sRGB, tEXt, zTXt, iTXt, bKGD, hIST, pHYs, sPLT, tIME
+- Color Types: Greyscale, Truecolour, Indexed-colour (Palette), Greyscale with alpha, Truecolour with alpha
+- Bit Depths: 1, 2, 4, 8, 16
+- Filters: None, Sub, Up, Average, Paeth
 
 # Install
 
