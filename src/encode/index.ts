@@ -58,6 +58,15 @@ export default function encode(metadata: Metadata) {
 
   function packPLTE() {
     let data = new Uint8Array();
+    if (metadata.palette) {
+      for (let i = 0; i < metadata.palette.length; i++) {
+        const palette = metadata.palette[i];
+        data = concatUInt8Array(
+          data,
+          new Uint8Array([palette[0], palette[1], palette[2]]),
+        );
+      }
+    }
     return data;
   }
 
