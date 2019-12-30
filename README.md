@@ -1,6 +1,6 @@
 # png
 
-> 🖼A browser compatible PNG decoder and encoder.
+> 🖼A PNG decoder and encoder.
 
 [![Build Status][travis-image]][travis-url]
 [![NPM Version][npm-version-image]][npm-url]
@@ -31,6 +31,16 @@ const imageBuffer = png.encode(metadata);
 ```
 
 See `metadata` type definition in [metadata.ts](src/helpers/metadata.ts).
+
+# Prior Art
+
+- [upng-js](https://github.com/photopea/UPNG.js)
+- [PNGjs-Image](https://github.com/YahooArchive/pngjs-image)
+- [fast-png](https://github.com/image-js/fast-png)
+- [pngparse-sync](https://github.com/mikolalysenko/pngparse-sync)
+- [pngjs3](https://github.com/gforge/pngjs3)
+- [pngjs](https://github.com/lukeapage/pngjs)
+- [png-js](https://github.com/foliojs/png.js)
 
 #
 

@@ -42,6 +42,20 @@ export default function encode(metadata: Metadata) {
     PLTE: packPLTE,
     IDAT: packIDAT,
     IEND: packIEND,
+    tRNS: packTRNS,
+    cHRM: packCHRM,
+    gAMA: packGAMA,
+    iCCP: packICCP,
+    sBIT: packSBIT,
+    sRGB: packSRGB,
+    tEXt: packTEXT,
+    zTXt: packZTXT,
+    iTXt: packITXT,
+    bKGD: packBKGD,
+    hIST: packHIST,
+    pHYs: packPHYS,
+    sPLT: packSPLT,
+    tIME: packTIME,
   };
 
   function packIHDR() {
@@ -82,6 +96,60 @@ export default function encode(metadata: Metadata) {
   }
 
   function packIEND() {
+    return new Uint8Array();
+  }
+
+  function packTRNS() {
+    return new Uint8Array();
+  }
+
+  function packCHRM() {
+    return new Uint8Array();
+  }
+
+  function packGAMA() {
+    return new Uint8Array();
+  }
+
+  function packICCP() {
+    return new Uint8Array();
+  }
+
+  function packSBIT() {
+    return new Uint8Array();
+  }
+
+  function packSRGB() {
+    if (metadata.sRGB !== undefined) {
+      return packUInt8(metadata.sRGB);
+    }
+    return new Uint8Array();
+  }
+
+  function packTEXT() {
+    return new Uint8Array();
+  }
+
+  function packZTXT() {
+    return new Uint8Array();
+  }
+
+  function packITXT() {
+    return new Uint8Array();
+  }
+  function packBKGD() {
+    return new Uint8Array();
+  }
+  function packHIST() {
+    return new Uint8Array();
+  }
+  function packPHYS() {
+    return new Uint8Array();
+  }
+  function packSPLT() {
+    return new Uint8Array();
+  }
+  function packTIME() {
     return new Uint8Array();
   }
 
