@@ -34,10 +34,20 @@ test('encode', async function() {
       const actualOutputPath = path.join(
         fixturesPath,
         testcaseName,
-        'actual.png',
+        'encode.png',
+      );
+      const actualBinaryPath = path.join(
+        fixturesPath,
+        testcaseName,
+        'actual.json',
+      );
+      const expectedBinaryPath = path.join(
+        fixturesPath,
+        testcaseName,
+        'expected.json',
       );
       const metadata = require(metadataPath);
-      const expectedOutputBuffer = await fse.readFile(expectedOutputPath);
+      const expectedBuffer = await fse.readFile(expectedOutputPath);
       let encodedBuffer = new Uint8Array();
       try {
         encodedBuffer = encode(metadata);
@@ -46,10 +56,20 @@ test('encode', async function() {
         expect(false).toBe(true);
       }
       try {
-        assert.deepStrictEqual(encodedBuffer, expectedOutputBuffer);
+        assert.deepStrictEqual(encodedBuffer, expectedBuffer);
         await fse.remove(actualOutputPath);
+        await fse.remove(actualBinaryPath);
+        await fse.remove(expectedBinaryPath);
         expect(true).toBe(true);
       } catch (e) {
+        await fse.outputFile(
+          actualBinaryPath,
+          JSON.stringify(Array.from(encodedBuffer)),
+        );
+        await fse.outputFile(
+          expectedBinaryPath,
+          JSON.stringify(Array.from(expectedBuffer)),
+        );
         await fse.outputFile(actualOutputPath, encodedBuffer);
         console.error(testcaseName + ' failed');
         expect(false).toBe(true);

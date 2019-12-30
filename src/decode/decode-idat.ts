@@ -7,126 +7,9 @@ import {
   COLOR_TYPES,
   COLOR_TYPES_TO_CHANNEL_PER_PIXEL,
 } from '../helpers/color-types';
-import { FILTER_TYPES, FILTER_LENGTH } from '../helpers/filters';
-import paeth from '../helpers/paeth';
-import rescaleSample from './rescale-sample';
-
-const unfilters = {
-  [FILTER_TYPES.NONE](data: Uint8Array) {
-    return data;
-  },
-  [FILTER_TYPES.SUB](data: Uint8Array, bytePerPixel: number) {
-    const unfiltered = new Uint8Array(data.length);
-    for (let i = 0; i < data.length; i++) {
-      if (i < bytePerPixel) {
-        unfiltered[i] = data[i];
-      } else {
-        unfiltered[i] = unfiltered[i - bytePerPixel] + data[i];
-      }
-    }
-    return unfiltered;
-  },
-  [FILTER_TYPES.UP](
-    data: Uint8Array,
-    bytePerPixel: number,
-    prevUnfilteredLine: Uint8Array,
-  ) {
-    const unfilteredLine = new Uint8Array(data.length);
-    for (let i = 0; i < data.length; i++) {
-      if (prevUnfilteredLine[i] === undefined) {
-        throw new Error('Unexpected previous unfiltered line item');
-      }
-      unfilteredLine[i] = prevUnfilteredLine[i] + data[i];
-    }
-    return unfilteredLine;
-  },
-  [FILTER_TYPES.AVERAGE](
-    data: Uint8Array,
-    bytePerPixel: number,
-    prevUnfilteredLine: Uint8Array,
-  ) {
-    const unfilteredLine = new Uint8Array(data.length);
-    for (let i = 0; i < data.length; i++) {
-      const left = i < bytePerPixel ? 0 : unfilteredLine[i - bytePerPixel];
-      const above =
-        prevUnfilteredLine[i] === undefined ? 0 : prevUnfilteredLine[i];
-      const avg = (left + above) >> 1;
-      unfilteredLine[i] = data[i] + avg;
-    }
-    return unfilteredLine;
-  },
-  [FILTER_TYPES.PAETH](
-    data: Uint8Array,
-    bytePerPixel: number,
-    prevUnfilteredLine: Uint8Array,
-  ) {
-    const unfilteredLine = new Uint8Array(data.length);
-    for (let i = 0; i < data.length; i++) {
-      if (prevUnfilteredLine[i] === undefined) {
-        throw new Error('Unexpected previous unfiltered line item at: ' + i);
-      }
-      const left = i < bytePerPixel ? 0 : unfilteredLine[i - bytePerPixel];
-      const above = prevUnfilteredLine[i];
-      const upperLeft =
-        i < bytePerPixel ? 0 : prevUnfilteredLine[i - bytePerPixel];
-      const p = paeth(left, above, upperLeft);
-      unfilteredLine[i] = data[i] + p;
-    }
-    return unfilteredLine;
-  },
-};
-
-function buildChannels(unfilteredLine: Uint8Array, depth: number): number[] {
-  if (depth === 1) {
-    const channels = [];
-    for (let i = 0; i < unfilteredLine.length; i++) {
-      const uint8 = unfilteredLine[i];
-      channels.push(
-        (uint8 >> 7) & 1,
-        (uint8 >> 6) & 1,
-        (uint8 >> 5) & 1,
-        (uint8 >> 4) & 1,
-        (uint8 >> 3) & 1,
-        (uint8 >> 2) & 1,
-        (uint8 >> 1) & 1,
-        uint8 & 1,
-      );
-    }
-    return channels;
-  }
-  if (depth === 2) {
-    const channels = [];
-    for (let i = 0; i < unfilteredLine.length; i++) {
-      const uint8 = unfilteredLine[i];
-      channels.push(
-        (uint8 >> 6) & 3,
-        (uint8 >> 4) & 3,
-        (uint8 >> 2) & 3,
-        uint8 & 3,
-      );
-    }
-    return channels;
-  }
-  if (depth === 4) {
-    const channels = [];
-    for (let i = 0; i < unfilteredLine.length; i++) {
-      const uint8 = unfilteredLine[i];
-      channels.push((uint8 >> 4) & 15, uint8 & 15);
-    }
-    return channels;
-  }
-  if (depth === 8) {
-    return Array.from(unfilteredLine);
-  }
-  if (depth === 16) {
-    const channels = [];
-    for (let i = 0; i < unfilteredLine.length; i += 2) {
-      channels.push((unfilteredLine[i] << 8) | unfilteredLine[i + 1]);
-    }
-    return channels;
-  }
-  throw new Error('Unsupported depth: ' + depth);
-}
+import { FILTER_TYPES, FILTER_LENGTH, unfilters } from '../helpers/filters';
+import rescaleSample from '../helpers/rescale-sample';
+import { typedArrayToChannel } from '../helpers/channels';
 
 const ADAM7_PASSES = [
   {
@@ -274,18 +157,18 @@ export default function decodeIDAT(
 
       // to channels
       let channelIndex = 0;
-      const channels = buildChannels(unfilteredLine, depth);
+      const channels = typedArrayToChannel(unfilteredLine, depth);
 
       function getPixelFromChannels() {
         if (colorType === COLOR_TYPES.GRAYSCALE) {
-          const color = rescaleSample(channels[channelIndex++], depth);
+          const color = rescaleSample(channels[channelIndex++], depth, 8);
           return [color, color, color, 0xff];
         }
         if (colorType === COLOR_TYPES.TRUE_COLOR) {
           return [
-            rescaleSample(channels[channelIndex++], depth),
-            rescaleSample(channels[channelIndex++], depth),
-            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth, 8),
+            rescaleSample(channels[channelIndex++], depth, 8),
+            rescaleSample(channels[channelIndex++], depth, 8),
             0xff,
           ];
         }
@@ -297,20 +180,20 @@ export default function decodeIDAT(
           return palette[paletteIndex];
         }
         if (colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
-          const color = rescaleSample(channels[channelIndex++], depth);
+          const color = rescaleSample(channels[channelIndex++], depth, 8);
           return [
             color,
             color,
             color,
-            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth, 8),
           ];
         }
         if (colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
           return [
-            rescaleSample(channels[channelIndex++], depth),
-            rescaleSample(channels[channelIndex++], depth),
-            rescaleSample(channels[channelIndex++], depth),
-            rescaleSample(channels[channelIndex++], depth),
+            rescaleSample(channels[channelIndex++], depth, 8),
+            rescaleSample(channels[channelIndex++], depth, 8),
+            rescaleSample(channels[channelIndex++], depth, 8),
+            rescaleSample(channels[channelIndex++], depth, 8),
           ];
         }
         throw new Error('Unsupported color type: ' + colorType);

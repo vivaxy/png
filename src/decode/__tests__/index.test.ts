@@ -30,7 +30,7 @@ test('decode', async function() {
       const actualOutputPath = path.join(
         fixturesPath,
         testcaseName,
-        'actual.json',
+        'decode.json',
       );
       const imageBinaryData = await fse.readFile(imagePath);
       const expectedOutputData = await fse.readJson(expectedOutputPath);

@@ -8,7 +8,7 @@ import crc32 from '../helpers/crc32';
 import decodeIDAT from './decode-idat';
 import decodeUTF8 from './decode-utf8';
 import Metadata from '../helpers/metadata';
-import rescaleSample from './rescale-sample';
+import rescaleSample from '../helpers/rescale-sample';
 import PNG_SIGNATURE from '../helpers/signature';
 import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
@@ -171,6 +171,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       const color = rescaleSample(
         (typedArray[index++] << 8) | typedArray[index++],
         metadata.depth,
+        8,
       );
       metadata.transparent = [color, color, color, 0xff];
     } else if (metadata.colorType === COLOR_TYPES.TRUE_COLOR) {
@@ -178,14 +179,17 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         rescaleSample(
           (typedArray[index++] << 8) | typedArray[index++],
           metadata.depth,
+          8,
         ),
         rescaleSample(
           (typedArray[index++] << 8) | typedArray[index++],
           metadata.depth,
+          8,
         ),
         rescaleSample(
           (typedArray[index++] << 8) | typedArray[index++],
           metadata.depth,
+          8,
         ),
         0xff,
       ];
@@ -339,6 +343,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
       const color = rescaleSample(
         (typedArray[index++] << 8) | typedArray[index++],
         metadata.depth,
+        8,
       );
       metadata.background = [color, color, color, 0xff];
     } else if ((metadata.colorType & 3) === COLOR_TYPES.TRUE_COLOR) {
@@ -346,14 +351,17 @@ export default function decode(arrayBuffer: ArrayBuffer) {
         rescaleSample(
           (typedArray[index++] << 8) | typedArray[index++],
           metadata.depth,
+          8,
         ),
         rescaleSample(
           (typedArray[index++] << 8) | typedArray[index++],
           metadata.depth,
+          8,
         ),
         rescaleSample(
           (typedArray[index++] << 8) | typedArray[index++],
           metadata.depth,
+          8,
         ),
         0xff,
       ];

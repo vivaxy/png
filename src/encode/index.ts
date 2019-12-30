@@ -3,6 +3,7 @@
  * @author vivaxy
  */
 import crc32 from '../helpers/crc32';
+import encodeIDAT from './encode-idat';
 import Metadata from '../helpers/metadata';
 import PNG_SIGNATURE from '../helpers/signature';
 import { concatUInt8Array } from '../helpers/typed-array';
@@ -47,7 +48,6 @@ export default function encode(metadata: Metadata) {
     let data = new Uint8Array();
     data = concatUInt8Array(data, packUInt32BE(metadata.width));
     data = concatUInt8Array(data, packUInt32BE(metadata.height));
-    data = concatUInt8Array(data, packUInt32BE(metadata.height));
     data = concatUInt8Array(data, packUInt8(metadata.depth));
     data = concatUInt8Array(data, packUInt8(metadata.colorType));
     data = concatUInt8Array(data, packUInt8(metadata.compression));
@@ -71,25 +71,30 @@ export default function encode(metadata: Metadata) {
   }
 
   function packIDAT() {
-    let data = new Uint8Array();
-    return data;
+    return encodeIDAT(
+      metadata.data,
+      metadata.width,
+      metadata.colorType,
+      metadata.depth,
+      metadata.interlace,
+      metadata.palette,
+    );
   }
 
   function packIEND() {
-    let data = new Uint8Array();
-    return data;
+    return new Uint8Array();
   }
 
   Object.keys(chunkPackers).forEach(function(chunkName) {
     const nameData = packChunkName(chunkName);
     const data = chunkPackers[chunkName]();
     const lengthData = packUInt32BE(data.length);
-    const lengthAndData = concatUInt8Array(lengthData, data);
-    const calculatedCrc32 = crc32(lengthAndData);
+    const typeAndData = concatUInt8Array(nameData, data);
+    const calculatedCrc32 = crc32(typeAndData);
     const endData = packUInt32BE(calculatedCrc32);
 
     const chunkData = concatUInt8Array(
-      concatUInt8Array(nameData, lengthAndData),
+      concatUInt8Array(lengthData, typeAndData),
       endData,
     );
     typedArray = concatUInt8Array(typedArray, chunkData);
