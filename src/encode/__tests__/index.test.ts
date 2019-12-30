@@ -7,49 +7,50 @@ import * as assert from 'assert';
 import * as fse from 'fs-extra';
 import * as glob from 'fast-glob';
 
-import decode from '..';
+import encode from '..';
 
 jest.setTimeout(10e3);
 const fixturesPath = path.join(__dirname, '..', '..', '__tests__', 'fixtures');
 
-test('decode', async function() {
-  const testcaseNames = await glob('*', {
-    cwd: fixturesPath,
-    onlyDirectories: true,
-  });
-  // const testcaseNames = ['chunk-tRNS-color-type-0'];
+test('encode', async function() {
+  // const testcaseNames = await glob('*', {
+  //   cwd: fixturesPath,
+  //   onlyDirectories: true,
+  // });
+  const testcaseNames = ['chunk-IHDR'];
 
   await Promise.all(
     testcaseNames.map(async function(testcaseName) {
-      const imagePath = path.join(fixturesPath, testcaseName, 'png.png');
-      const expectedOutputPath = path.join(
+      const metadataPath = path.join(
         fixturesPath,
         testcaseName,
         'metadata.json',
       );
+      const expectedOutputPath = path.join(
+        fixturesPath,
+        testcaseName,
+        'png.png',
+      );
       const actualOutputPath = path.join(
         fixturesPath,
         testcaseName,
-        'actual.json',
+        'actual.png',
       );
-      const imageBinaryData = await fse.readFile(imagePath);
-      const expectedOutputData = await fse.readJson(expectedOutputPath);
-      let decodedData = null;
+      const metadata = require(metadataPath);
+      const expectedOutputBuffer = await fse.readFile(expectedOutputPath);
+      let encodedBuffer = new Uint8Array();
       try {
-        decodedData = decode(imageBinaryData);
+        encodedBuffer = encode(metadata);
       } catch (ex) {
         console.error(testcaseName + ' failed with error: ' + ex.stack);
         expect(false).toBe(true);
       }
       try {
-        assert.deepStrictEqual(decodedData, expectedOutputData);
+        assert.deepStrictEqual(encodedBuffer, expectedOutputBuffer);
         await fse.remove(actualOutputPath);
         expect(true).toBe(true);
       } catch (e) {
-        await fse.outputFile(
-          actualOutputPath,
-          JSON.stringify(decodedData, null, 2),
-        );
+        await fse.outputFile(actualOutputPath, encodedBuffer);
         console.error(testcaseName + ' failed');
         expect(false).toBe(true);
       }

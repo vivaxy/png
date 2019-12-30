@@ -12,7 +12,7 @@ import rescaleSample from './rescale-sample';
 import PNG_SIGNATURE from '../helpers/signature';
 import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
-import { concatUint8Array } from '../helpers/typed-array';
+import { concatUInt8Array } from '../helpers/typed-array';
 import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
 
 export default function decode(arrayBuffer: ArrayBuffer) {
@@ -155,7 +155,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   function parseIDAT(length: number) {
     // save data, decode later
-    idatUint8Array = concatUint8Array(
+    idatUint8Array = concatUInt8Array(
       idatUint8Array,
       typedArray.slice(index, index + length),
     );
