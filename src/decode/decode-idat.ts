@@ -130,7 +130,8 @@ export default function decodeIDAT(
   const inflatedData = pako.inflate(deflatedData);
   const images = buildImages(interlace, width, height);
   const channelPerPixel = COLOR_TYPES_TO_CHANNEL_PER_PIXEL[colorType];
-  const bpp = channelPerPixel * depth;
+  const bitPerPixel = channelPerPixel * depth;
+  const bytePerPixel = bitPerPixel >> 3;
 
   let dataIndex = 0;
   let prevUnfilteredLine = new Uint8Array();
@@ -140,7 +141,8 @@ export default function decodeIDAT(
     for (let heightIndex = 0; heightIndex < passHeight; heightIndex++) {
       // scanline
       // const scanlineWidth = Math.ceil(metadata.width * channel * metadata.depth / 8) + FILTER_LENGTH;
-      const scanlineWidth = ((passWidth * bpp + 7) >> 3) + FILTER_LENGTH;
+      const scanlineWidth =
+        ((passWidth * bitPerPixel + 7) >> 3) + FILTER_LENGTH;
 
       // unfilter
       const filterType = inflatedData[dataIndex + 0];
@@ -150,7 +152,7 @@ export default function decodeIDAT(
       const unfilter = unfilters[filterType as FILTER_TYPES];
       const unfilteredLine = unfilter(
         inflatedData.slice(dataIndex + 1, dataIndex + scanlineWidth),
-        bpp >> 3,
+        bytePerPixel,
         prevUnfilteredLine,
       );
       prevUnfilteredLine = unfilteredLine;

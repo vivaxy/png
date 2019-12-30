@@ -53,26 +53,34 @@ export function channelToTypedArray(
 ) {
   const typedArray = new Uint8Array(scanlineWidth);
   let typedArrayIndex = 0;
-  for (let i = 0; i < channels.length; i++) {
+  let channelIndex = 0;
+  while (channelIndex < channels.length) {
     if (depth === 1) {
       typedArray[typedArrayIndex++] =
-        ((channels[i++] & 1) << 7) |
-        ((channels[i++] & 1) << 6) |
-        ((channels[i++] & 1) << 5) |
-        ((channels[i++] & 1) << 4) |
-        ((channels[i++] & 1) << 3) |
-        ((channels[i++] & 1) << 2) |
-        ((channels[i++] & 1) << 1) |
-        (channels[i++] & 1);
+        ((channels[channelIndex++] & 1) << 7) |
+        ((channels[channelIndex++] & 1) << 6) |
+        ((channels[channelIndex++] & 1) << 5) |
+        ((channels[channelIndex++] & 1) << 4) |
+        ((channels[channelIndex++] & 1) << 3) |
+        ((channels[channelIndex++] & 1) << 2) |
+        ((channels[channelIndex++] & 1) << 1) |
+        (channels[channelIndex++] & 1);
     } else if (depth === 2) {
       typedArray[typedArrayIndex++] =
-        ((channels[i++] & 3) << 6) |
-        ((channels[i++] & 3) << 4) |
-        ((channels[i++] & 3) << 2) |
-        (channels[i++] & 3);
+        ((channels[channelIndex++] & 3) << 6) |
+        ((channels[channelIndex++] & 3) << 4) |
+        ((channels[channelIndex++] & 3) << 2) |
+        (channels[channelIndex++] & 3);
     } else if (depth === 4) {
+      typedArray[typedArrayIndex++] =
+        ((channels[channelIndex++] & 15) << 4) |
+        (channels[channelIndex++] & 15);
     } else if (depth === 8) {
+      typedArray[typedArrayIndex++] = channels[channelIndex++];
     } else if (depth === 16) {
+      const channel = channels[channelIndex++];
+      typedArray[typedArrayIndex++] = (channel >> 8) & 0xff;
+      typedArray[typedArrayIndex++] = channel & 0xff;
     } else {
       throw new Error('Unsupported depth: ' + depth);
     }

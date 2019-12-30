@@ -2,8 +2,6 @@
  * @since 2019-12-27 01:29
  * @author vivaxy
  */
-import paeth from './paeth';
-
 export const FILTER_LENGTH = 1;
 export enum FILTER_TYPES {
   NONE = 0,
@@ -26,11 +24,8 @@ export const unfilters: {
   [FILTER_TYPES.SUB](data: Uint8Array, bytePerPixel: number) {
     const unfiltered = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      if (i < bytePerPixel) {
-        unfiltered[i] = data[i];
-      } else {
-        unfiltered[i] = unfiltered[i - bytePerPixel] + data[i];
-      }
+      const left = unfiltered[i - bytePerPixel] || 0;
+      unfiltered[i] = data[i] + left;
     }
     return unfiltered;
   },
@@ -41,10 +36,8 @@ export const unfilters: {
   ) {
     const unfilteredLine = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      if (prevUnfilteredLine[i] === undefined) {
-        throw new Error('Unexpected previous unfiltered line item');
-      }
-      unfilteredLine[i] = prevUnfilteredLine[i] + data[i];
+      const up = prevUnfilteredLine[i] || 0;
+      unfilteredLine[i] = up + data[i];
     }
     return unfilteredLine;
   },
@@ -55,9 +48,8 @@ export const unfilters: {
   ) {
     const unfilteredLine = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      const left = i < bytePerPixel ? 0 : unfilteredLine[i - bytePerPixel];
-      const above =
-        prevUnfilteredLine[i] === undefined ? 0 : prevUnfilteredLine[i];
+      const left = unfilteredLine[i - bytePerPixel] || 0;
+      const above = prevUnfilteredLine[i] || 0;
       const avg = (left + above) >> 1;
       unfilteredLine[i] = data[i] + avg;
     }
@@ -70,13 +62,9 @@ export const unfilters: {
   ) {
     const unfilteredLine = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      if (prevUnfilteredLine[i] === undefined) {
-        throw new Error('Unexpected previous unfiltered line item at: ' + i);
-      }
-      const left = i < bytePerPixel ? 0 : unfilteredLine[i - bytePerPixel];
+      const left = unfilteredLine[i - bytePerPixel] || 0;
       const above = prevUnfilteredLine[i];
-      const upperLeft =
-        i < bytePerPixel ? 0 : prevUnfilteredLine[i - bytePerPixel];
+      const upperLeft = prevUnfilteredLine[i - bytePerPixel] || 0;
       const p = paeth(left, above, upperLeft);
       unfilteredLine[i] = data[i] + p;
     }
@@ -87,39 +75,104 @@ export const unfilters: {
 export const filters: {
   [filterType in FILTER_TYPES]: (
     data: Uint8Array,
+    bytePerPixel: number,
+    prevFilteredLine: Uint8Array,
   ) => {
     sum: number;
     filtered: Uint8Array;
   };
 } = {
   [FILTER_TYPES.NONE](data: Uint8Array) {
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) {
+      sum += data[i];
+    }
     return {
-      sum: data.length,
+      sum,
       filtered: data,
     };
   },
-  [FILTER_TYPES.SUB](data: Uint8Array) {
+  [FILTER_TYPES.SUB](data: Uint8Array, bytePerPixel: number) {
+    let sum = 0;
+    const filtered = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      const left = filtered[i - bytePerPixel] || 0;
+      filtered[i] = data[i] - left;
+      sum += filtered[i];
+    }
     return {
-      sum: Infinity,
-      filtered: data,
+      sum,
+      filtered,
     };
   },
-  [FILTER_TYPES.UP](data: Uint8Array) {
+  [FILTER_TYPES.UP](
+    data: Uint8Array,
+    bytePerPixel: number,
+    prevFilteredLine: Uint8Array,
+  ) {
+    let sum = 0;
+    const filtered = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      const up = prevFilteredLine[i] || 0;
+      filtered[i] = data[i] - up;
+      sum += filtered[i];
+    }
     return {
-      sum: Infinity,
-      filtered: data,
+      sum,
+      filtered,
     };
   },
-  [FILTER_TYPES.AVERAGE](data: Uint8Array) {
+  [FILTER_TYPES.AVERAGE](
+    data: Uint8Array,
+    bytePerPixel: number,
+    prevFilteredLine: Uint8Array,
+  ) {
+    let sum = 0;
+    const filtered = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      const left = filtered[i - bytePerPixel] || 0;
+      const above = prevFilteredLine[i] || 0;
+      const avg = (left + above) >> 1;
+      filtered[i] = data[i] - avg;
+      sum += filtered[i];
+    }
     return {
-      sum: Infinity,
-      filtered: data,
+      sum,
+      filtered,
     };
   },
-  [FILTER_TYPES.PAETH](data: Uint8Array) {
+  [FILTER_TYPES.PAETH](
+    data: Uint8Array,
+    bytePerPixel: number,
+    prevFilteredLine: Uint8Array,
+  ) {
+    let sum = 0;
+    const filtered = new Uint8Array(data.length);
+    for (let i = 0; i < data.length; i++) {
+      const left = filtered[i - bytePerPixel] || 0;
+      const above = prevFilteredLine[i] || 0;
+      const upperLeft = prevFilteredLine[i - bytePerPixel] || 0;
+      const p = paeth(left, above, upperLeft);
+      filtered[i] = data[i] - p;
+      sum += filtered[i];
+    }
     return {
-      sum: Infinity,
-      filtered: data,
+      sum,
+      filtered,
     };
   },
 };
+
+function paeth(left: number, above: number, upperLeft: number) {
+  const p = left + above - upperLeft;
+  const pa = Math.abs(p - left);
+  const pb = Math.abs(p - above);
+  const pc = Math.abs(p - upperLeft);
+  if (pa <= pb && pa <= pc) {
+    return left;
+  } else if (pb <= pc) {
+    return above;
+  } else {
+    return upperLeft;
+  }
+}
