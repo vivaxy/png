@@ -1,13 +1,13 @@
 # png
 
-> 🖼A full-featured PNG decoder and encoder.
-
 [![Build Status][travis-image]][travis-url]
 [![NPM Version][npm-version-image]][npm-url]
 [![NPM Downloads][npm-downloads-image]][npm-url]
 [![MIT License][license-image]][license-url]
 [![Standard Version][standard-version-image]][standard-version-url]
 [![Codecov][codecov-image]][codecov-url]
+
+> 🖼A full-featured PNG decoder and encoder.
 
 # Supports
 
