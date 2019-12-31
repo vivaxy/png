@@ -2,7 +2,6 @@
  * @since 20180911 17:16
  * @author vivaxy
  *
- * @todo chunk-cHRM
  * @todo chunk-hIST
  * @todo chunk-IEND
  * @todo chunk-IHDR

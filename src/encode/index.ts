@@ -10,6 +10,7 @@ import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
 import rescaleSample from '../helpers/rescale-sample';
 import { concatUInt8Array } from '../helpers/typed-array';
+import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
 
 export default function encode(metadata: Metadata) {
   // Signature
@@ -142,7 +143,29 @@ export default function encode(metadata: Metadata) {
   }
 
   function packCHRM() {
-    return new Uint8Array();
+    if (!metadata.chromaticities) {
+      return new Uint8Array();
+    }
+    const { chromaticities } = metadata;
+    let data = new Uint8Array();
+    ([
+      'white',
+      'red',
+      'green',
+      'blue',
+    ] as (keyof typeof chromaticities)[]).forEach(function(color) {
+      (['x', 'y'] as (keyof typeof chromaticities[typeof color])[]).forEach(
+        function(axis) {
+          data = concatUInt8Array(
+            data,
+            packUInt32BE(
+              chromaticities[color]![axis] * CHROMATICITIES_DIVISION,
+            ),
+          );
+        },
+      );
+    });
+    return data;
   }
 
   function packGAMA() {
@@ -214,7 +237,7 @@ export default function encode(metadata: Metadata) {
     }
     if ((metadata.colorType & 3) === COLOR_TYPES.GRAYSCALE) {
       const color = rescaleSample(metadata.background[0], 8, metadata.depth);
-      return new Uint8Array([(color >> 8) & 0xff, color & 0xff]);
+      return packUInt16BE(color);
     }
     if ((metadata.colorType & 3) === COLOR_TYPES.TRUE_COLOR) {
       const data = new Uint8Array(6);
