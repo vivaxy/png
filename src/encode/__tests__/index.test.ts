@@ -8,7 +8,6 @@
  * @todo chunk-IHDR
  * @todo chunk-iTXt
  * @todo chunk-PLTE
- * @todo chunk-sBIT
  * @todo chunk-tEXt
  * @todo chunk-zTXt
  */
