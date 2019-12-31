@@ -1,8 +1,6 @@
 /**
  * @since 20180911 17:16
  * @author vivaxy
- *
- * @todo chunk-PLTE
  */
 import * as path from 'path';
 import * as fse from 'fs-extra';
