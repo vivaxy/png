@@ -6,7 +6,6 @@
  * @todo chunk-IHDR
  * @todo chunk-iTXt
  * @todo chunk-PLTE
- * @todo chunk-zTXt
  */
 import * as path from 'path';
 import * as fse from 'fs-extra';

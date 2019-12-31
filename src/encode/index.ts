@@ -369,6 +369,19 @@ export default function encode(metadata: Metadata) {
     });
   }
 
+  // zTXt
+  if (metadata.compressedText) {
+    Object.keys(metadata.compressedText).forEach(function(keyword) {
+      let data = concatUInt8Array(packString(keyword), packUInt8(0));
+      data = concatUInt8Array(data, packUInt8(0));
+      data = concatUInt8Array(
+        data,
+        pako.deflate(packString(metadata.compressedText![keyword])),
+      );
+      addChunk('zTXt', data);
+    });
+  }
+
   // Other Chunks
   Object.keys(chunkPackers).forEach(function(chunkName) {
     const data = chunkPackers[chunkName]();
