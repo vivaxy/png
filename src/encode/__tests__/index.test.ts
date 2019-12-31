@@ -6,7 +6,6 @@
  * @todo chunk-IHDR
  * @todo chunk-iTXt
  * @todo chunk-PLTE
- * @todo chunk-tEXt
  * @todo chunk-zTXt
  */
 import * as path from 'path';

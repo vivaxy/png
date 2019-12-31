@@ -49,9 +49,6 @@ export default function encode(metadata: Metadata) {
   } = {
     IHDR: packIHDR,
     tIME: packTIME,
-    zTXt: packZTXT,
-    tEXt: packTEXT,
-    iTXt: packITXT,
     sRGB: packSRGB,
     pHYs: packPHYS,
     sPLT: packSPLT,
@@ -228,18 +225,6 @@ export default function encode(metadata: Metadata) {
     return new Uint8Array();
   }
 
-  function packTEXT() {
-    return new Uint8Array();
-  }
-
-  function packZTXT() {
-    return new Uint8Array();
-  }
-
-  function packITXT() {
-    return new Uint8Array();
-  }
-
   function packBKGD() {
     if (!metadata.background) {
       return new Uint8Array();
@@ -361,22 +346,44 @@ export default function encode(metadata: Metadata) {
     return data;
   }
 
+  function addChunk(chunkName: string, data: Uint8Array) {
+    const nameData = packString(chunkName);
+    const lengthData = packUInt32BE(data.length);
+    const typeAndData = concatUInt8Array(nameData, data);
+    const calculatedCrc32 = crc32(typeAndData);
+    const endData = packUInt32BE(calculatedCrc32);
+
+    const chunkData = concatUInt8Array(
+      concatUInt8Array(lengthData, typeAndData),
+      endData,
+    );
+    typedArray = concatUInt8Array(typedArray, chunkData);
+  }
+
+  // tEXt
+  if (metadata.text) {
+    Object.keys(metadata.text).forEach(function(keyword) {
+      let data = concatUInt8Array(packString(keyword), packUInt8(0));
+      data = concatUInt8Array(data, packString(metadata.text![keyword]));
+      addChunk('tEXt', data);
+    });
+  }
+
+  // Other Chunks
   Object.keys(chunkPackers).forEach(function(chunkName) {
     const data = chunkPackers[chunkName]();
     if (data.length > 0 || chunkName === 'IEND') {
-      const nameData = packString(chunkName);
-      const lengthData = packUInt32BE(data.length);
-      const typeAndData = concatUInt8Array(nameData, data);
-      const calculatedCrc32 = crc32(typeAndData);
-      const endData = packUInt32BE(calculatedCrc32);
-
-      const chunkData = concatUInt8Array(
-        concatUInt8Array(lengthData, typeAndData),
-        endData,
-      );
-      typedArray = concatUInt8Array(typedArray, chunkData);
+      addChunk(chunkName, data);
     }
   });
+
+  function packZTXT() {
+    return new Uint8Array();
+  }
+
+  function packITXT() {
+    return new Uint8Array();
+  }
 
   return typedArray;
 }
