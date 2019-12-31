@@ -113,7 +113,14 @@ export default function encode(metadata: Metadata) {
       }
     } else if (metadata.colorType === COLOR_TYPES.TRUE_COLOR) {
       if (metadata.transparent) {
-        throw new Error('Todo');
+        for (let i = 0; i < 3; i++) {
+          const color = rescaleSample(
+            metadata.transparent[i],
+            8,
+            metadata.depth,
+          );
+          data.push((color >> 8) & 0xff, color & 0xff);
+        }
       }
     } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
       if (!metadata.palette) {

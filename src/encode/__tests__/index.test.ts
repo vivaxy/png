@@ -12,7 +12,6 @@
  * @todo chunk-sBIT
  * @todo chunk-sPLT
  * @todo chunk-tEXt
- * @todo chunk-tRNS-color-type-2
  * @todo chunk-tRNS-color-type-3
  * @todo chunk-zTXt
  */
