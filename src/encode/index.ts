@@ -157,33 +157,34 @@ export default function encode(metadata: Metadata) {
   }
 
   function packSBIT() {
-    if (metadata.significantBits) {
-      if (metadata.colorType === COLOR_TYPES.GRAYSCALE) {
-        return packUInt8(metadata.significantBits[0]);
+    if (!metadata.significantBits) {
+      return new Uint8Array();
+    }
+    if (metadata.colorType === COLOR_TYPES.GRAYSCALE) {
+      return packUInt8(metadata.significantBits[0]);
+    }
+    if (
+      metadata.colorType === COLOR_TYPES.TRUE_COLOR ||
+      metadata.colorType === COLOR_TYPES.PALETTE
+    ) {
+      const data = new Uint8Array(3);
+      for (let i = 0; i < 3; i++) {
+        data[i] = metadata.significantBits[i];
       }
-      if (
-        metadata.colorType === COLOR_TYPES.TRUE_COLOR ||
-        metadata.colorType === COLOR_TYPES.PALETTE
-      ) {
-        const data = new Uint8Array(3);
-        for (let i = 0; i < 3; i++) {
-          data[i] = metadata.significantBits[i];
-        }
-        return data;
+      return data;
+    }
+    if (metadata.colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
+      return concatUInt8Array(
+        packUInt8(metadata.significantBits[0]),
+        packUInt8(metadata.significantBits[1]),
+      );
+    }
+    if (metadata.colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
+      const data = new Uint8Array(4);
+      for (let i = 0; i < 4; i++) {
+        data[i] = metadata.significantBits[i];
       }
-      if (metadata.colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
-        return concatUInt8Array(
-          packUInt8(metadata.significantBits[0]),
-          packUInt8(metadata.significantBits[1]),
-        );
-      }
-      if (metadata.colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
-        const data = new Uint8Array(4);
-        for (let i = 0; i < 4; i++) {
-          data[i] = metadata.significantBits[i];
-        }
-        return data;
-      }
+      return data;
     }
     return new Uint8Array();
   }
@@ -206,7 +207,46 @@ export default function encode(metadata: Metadata) {
   function packITXT() {
     return new Uint8Array();
   }
+
   function packBKGD() {
+    if (!metadata.background) {
+      return new Uint8Array();
+    }
+    if ((metadata.colorType & 3) === COLOR_TYPES.GRAYSCALE) {
+      const color = rescaleSample(metadata.background[0], 8, metadata.depth);
+      return new Uint8Array([(color >> 8) & 0xff, color & 0xff]);
+    }
+    if ((metadata.colorType & 3) === COLOR_TYPES.TRUE_COLOR) {
+      const data = new Uint8Array(6);
+      for (let i = 0; i < 3; i++) {
+        const color = rescaleSample(metadata.background[i], 8, metadata.depth);
+        data[i * 2] = (color >> 8) & 0xff;
+        data[i * 2 + 1] = color & 0xff;
+      }
+      return data;
+    } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
+      if (!metadata.palette) {
+        throw new Error('Missing chunk: PLTE');
+      }
+      let index = -1;
+      for (
+        let paletteIndex = 0;
+        paletteIndex < metadata.palette.length;
+        paletteIndex++
+      ) {
+        for (let i = 0; i < 4; i++) {
+          if (metadata.palette[paletteIndex][i] === metadata.background[i]) {
+            index = paletteIndex;
+            break;
+          }
+        }
+      }
+      if (index === -1) {
+        throw new Error('Background not in palette');
+      }
+      return packUInt8(index);
+    }
+
     return new Uint8Array();
   }
   function packHIST() {
