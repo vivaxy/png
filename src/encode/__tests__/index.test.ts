@@ -1,11 +1,7 @@
 /**
  * @since 20180911 17:16
  * @author vivaxy
- * @input input.json
  *
- * @todo bit-depth-04
- * @todo bit-depth-08
- * @todo bit-depth-16
  * @todo chunk-bKGD
  * @todo chunk-cHRM
  * @todo chunk-hIST
@@ -41,17 +37,14 @@ import decode from '../../decode';
 // @ts-ignore
 test.each(global.testcases)('decode %s', async function(
   testcaseName,
-  metadataPath,
+  fixturePath,
 ) {
-  const metadata = require(metadataPath);
+  const metadata = require(path.join(fixturePath, 'input.json'));
   const imageBinaryData = encode(metadata);
   expect(imageBinaryData).toMatchSnapshot();
+  await fse.outputFile(path.join(fixturePath, 'output.png'), imageBinaryData);
   await fse.outputFile(
-    path.join(metadataPath, '..', 'output.png'),
-    imageBinaryData,
-  );
-  await fse.outputFile(
-    path.join(metadataPath, '..', 'decode.json'),
+    path.join(fixturePath, 'decode.json'),
     JSON.stringify(decode(imageBinaryData), null, 2),
   );
 });

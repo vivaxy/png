@@ -11,7 +11,6 @@ module.exports = class PNGTestEnvironment extends NodeEnvironment {
     super(config);
     this.todo = docblockPragmas.todo || [];
     this.only = docblockPragmas.only;
-    this.input = docblockPragmas.input;
     this.testFilePath = testPath;
   }
 
@@ -27,8 +26,8 @@ module.exports = class PNGTestEnvironment extends NodeEnvironment {
       }
       return !this.todo.includes(testcaseName);
     });
-    this.global.testcases = filteredTestcaseNames.map((testcaseName) => {
-      return [testcaseName, path.join(fixturesPath, testcaseName, this.input)];
+    this.global.testcases = filteredTestcaseNames.map(function(testcaseName) {
+      return [testcaseName, path.join(fixturesPath, testcaseName)];
     });
     await super.setup();
   }

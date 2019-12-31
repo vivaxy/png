@@ -131,7 +131,7 @@ export default function decodeIDAT(
   const images = buildImages(interlace, width, height);
   const channelPerPixel = COLOR_TYPES_TO_CHANNEL_PER_PIXEL[colorType];
   const bitPerPixel = channelPerPixel * depth;
-  const bytePerPixel = bitPerPixel >> 3;
+  const bytePerPixel = bitPerPixel >> 3 || 1;
 
   let dataIndex = 0;
   let prevUnfilteredLine = new Uint8Array();

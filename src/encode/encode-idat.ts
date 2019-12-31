@@ -25,7 +25,7 @@ export default function encodeIDAT(
   const channelPerPixel = COLOR_TYPES_TO_CHANNEL_PER_PIXEL[colorType];
   const scanlineWidth = (width * channelPerPixel * depth + 7) >> 3;
   const bitPerPixel = channelPerPixel * depth;
-  const bytePerPixel = bitPerPixel >> 3;
+  const bytePerPixel = bitPerPixel >> 3 || 1;
   let prevUnfilteredLine = new Uint8Array();
 
   for (let scanlineIndex = 0; scanlineIndex < scanlineCount; scanlineIndex++) {
@@ -91,7 +91,7 @@ export default function encodeIDAT(
     let minFilterSum = Infinity;
     let filteredLine = new Uint8Array();
     let filterType = 0;
-    const filterTypes = [
+    const filterTypes: FILTER_TYPES[] = [
       FILTER_TYPES.NONE,
       FILTER_TYPES.SUB,
       FILTER_TYPES.UP,
@@ -99,8 +99,8 @@ export default function encodeIDAT(
       FILTER_TYPES.PAETH,
     ];
     for (let filterIndex = 0; filterIndex < filterTypes.length; filterIndex++) {
-      const filter = filters[filterTypes[filterIndex] as FILTER_TYPES];
-      const { sum, filtered } = filter(
+      const currentFilterType = filterTypes[filterIndex];
+      const { sum, filtered } = filters[currentFilterType](
         unfilteredLine,
         bytePerPixel,
         prevUnfilteredLine,
@@ -108,7 +108,7 @@ export default function encodeIDAT(
       if (sum < minFilterSum) {
         minFilterSum = sum;
         filteredLine = filtered;
-        filterType = filterTypes[filterIndex];
+        filterType = currentFilterType;
       }
     }
 
