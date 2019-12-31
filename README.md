@@ -1,6 +1,6 @@
 # png
 
-> 🖼A PNG decoder and encoder.
+> 🖼A full-featured PNG decoder and encoder.
 
 [![Build Status][travis-image]][travis-url]
 [![NPM Version][npm-version-image]][npm-url]
