@@ -5,7 +5,6 @@
 import * as path from 'path';
 import * as fse from 'fs-extra';
 import encode from '..';
-import decode from '../../decode';
 
 // @ts-ignore
 test.each(global.testcases)('encode %s', async function(
@@ -16,8 +15,4 @@ test.each(global.testcases)('encode %s', async function(
   const imageBinaryData = encode(metadata);
   expect(imageBinaryData).toMatchSnapshot();
   await fse.outputFile(path.join(fixturePath, 'output.png'), imageBinaryData);
-  await fse.outputFile(
-    path.join(fixturePath, 'decode.json'),
-    JSON.stringify(decode(imageBinaryData), null, 2),
-  );
 });
