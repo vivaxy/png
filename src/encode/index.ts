@@ -25,7 +25,7 @@ export default function encode(metadata: Metadata) {
   }
 
   function packUInt8(value: number) {
-    return new Uint8Array([value & 0xff]);
+    return new Uint8Array([value]);
   }
 
   function packChunkName(name: string) {
@@ -135,6 +135,34 @@ export default function encode(metadata: Metadata) {
   }
 
   function packSBIT() {
+    if (metadata.significantBits) {
+      if (metadata.colorType === COLOR_TYPES.GRAYSCALE) {
+        return packUInt8(metadata.significantBits[0]);
+      }
+      if (
+        metadata.colorType === COLOR_TYPES.TRUE_COLOR ||
+        metadata.colorType === COLOR_TYPES.PALETTE
+      ) {
+        const data = new Uint8Array(3);
+        for (let i = 0; i < 3; i++) {
+          data[i] = metadata.significantBits[i];
+        }
+        return data;
+      }
+      if (metadata.colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
+        return concatUInt8Array(
+          packUInt8(metadata.significantBits[0]),
+          packUInt8(metadata.significantBits[1]),
+        );
+      }
+      if (metadata.colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
+        const data = new Uint8Array(4);
+        for (let i = 0; i < 4; i++) {
+          data[i] = metadata.significantBits[i];
+        }
+        return data;
+      }
+    }
     return new Uint8Array();
   }
 

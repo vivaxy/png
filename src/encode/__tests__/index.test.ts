@@ -10,7 +10,6 @@
  * @todo chunk-IEND
  * @todo chunk-IHDR
  * @todo chunk-iTXt
- * @todo chunk-pHYs
  * @todo chunk-PLTE
  * @todo chunk-sBIT
  * @todo chunk-sPLT
