@@ -6,8 +6,6 @@
   "compression": 0,
   "interlace": 0,
   "filter": 0,
-  "gamma": 1,
-  "lastModificationTime": 949408496000,
   "data": [
     255,
     255,
@@ -4105,5 +4103,7 @@
     255,
     255,
     255
-  ]
+  ],
+  "gamma": 1,
+  "lastModificationTime": 946730096000
 }

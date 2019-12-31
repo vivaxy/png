@@ -34,6 +34,7 @@ See `metadata` type definition in [metadata.ts](src/helpers/metadata.ts).
 
 # Prior Art
 
+- [PngSuite - the official set of PNG test images](http://www.schaik.com/pngsuite/)
 - [upng-js](https://github.com/photopea/UPNG.js)
 - [PNGjs-Image](https://github.com/YahooArchive/pngjs-image)
 - [fast-png](https://github.com/image-js/fast-png)

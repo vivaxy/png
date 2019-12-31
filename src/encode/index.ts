@@ -17,11 +17,15 @@ export default function encode(metadata: Metadata) {
   // Helpers
   function packUInt32BE(value: number) {
     return new Uint8Array([
-      (value >>> 24) & 0xff,
-      (value >>> 16) & 0xff,
-      (value >>> 8) & 0xff,
+      (value >> 24) & 0xff,
+      (value >> 16) & 0xff,
+      (value >> 8) & 0xff,
       value & 0xff,
     ]);
+  }
+
+  function packUInt16BE(value: number) {
+    return new Uint8Array([(value >> 8) & 0xff, value & 0xff]);
   }
 
   function packUInt8(value: number) {
@@ -213,7 +217,20 @@ export default function encode(metadata: Metadata) {
     return new Uint8Array();
   }
   function packTIME() {
-    return new Uint8Array();
+    if (!metadata.lastModificationTime) {
+      return new Uint8Array();
+    }
+    const data = new Uint8Array(7);
+    const date = new Date(metadata.lastModificationTime);
+    const year = date.getUTCFullYear();
+    data[0] = (year >> 8) & 0xff;
+    data[1] = year & 0xff;
+    data[2] = date.getUTCMonth() + 1;
+    data[3] = date.getUTCDate();
+    data[4] = date.getUTCHours();
+    data[5] = date.getUTCMinutes();
+    data[6] = date.getUTCSeconds();
+    return data;
   }
 
   Object.keys(chunkPackers).forEach(function(chunkName) {

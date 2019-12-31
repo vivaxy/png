@@ -437,7 +437,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     const second = readUInt8();
     metadata.lastModificationTime = Date.UTC(
       year,
-      month,
+      month - 1,
       day,
       hour,
       minute,
