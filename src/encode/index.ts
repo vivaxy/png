@@ -8,6 +8,7 @@ import Metadata from '../helpers/metadata';
 import PNG_SIGNATURE from '../helpers/signature';
 import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
+import rescaleSample from '../helpers/rescale-sample';
 import { concatUInt8Array } from '../helpers/typed-array';
 
 export default function encode(metadata: Metadata) {
@@ -105,7 +106,16 @@ export default function encode(metadata: Metadata) {
 
   function packTRNS() {
     const data = [];
-    if (metadata.colorType === COLOR_TYPES.PALETTE) {
+    if (metadata.colorType === COLOR_TYPES.GRAYSCALE) {
+      if (metadata.transparent) {
+        const color = rescaleSample(metadata.transparent[0], 8, metadata.depth);
+        data.push((color >> 8) & 0xff, color & 0xff);
+      }
+    } else if (metadata.colorType === COLOR_TYPES.TRUE_COLOR) {
+      if (metadata.transparent) {
+        throw new Error('Todo');
+      }
+    } else if (metadata.colorType === COLOR_TYPES.PALETTE) {
       if (!metadata.palette) {
         throw new Error('Palette is required');
       }
