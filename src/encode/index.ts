@@ -30,10 +30,10 @@ export default function encode(metadata: Metadata) {
   }
 
   function packUInt8(value: number) {
-    return new Uint8Array([value]);
+    return new Uint8Array([value & 0xff]);
   }
 
-  function packChunkName(name: string) {
+  function packString(name: string) {
     const data = new Uint8Array(name.length);
     for (let i = 0; i < name.length; i++) {
       data[i] = name.charCodeAt(i);
@@ -270,9 +270,40 @@ export default function encode(metadata: Metadata) {
     }
     return data;
   }
+
   function packSPLT() {
-    return new Uint8Array();
+    if (!metadata.suggestedPalette) {
+      return new Uint8Array();
+    }
+    let data = packString(metadata.suggestedPalette.name);
+    data = concatUInt8Array(data, packUInt8(0));
+    data = concatUInt8Array(data, packUInt8(metadata.suggestedPalette.depth));
+    for (let i = 0; i < metadata.suggestedPalette.palette.length; i++) {
+      const palette = metadata.suggestedPalette.palette[i];
+      if (metadata.suggestedPalette.depth === 8) {
+        const paletteData = new Uint8Array([
+          palette[0],
+          palette[1],
+          palette[2],
+          palette[3],
+          (palette[4] >> 8) & 0xff,
+          palette[4] & 0xff,
+        ]);
+        data = concatUInt8Array(data, paletteData);
+      } else if (metadata.suggestedPalette.depth === 16) {
+        const paletteData = new Uint8Array(10);
+        for (let i = 0; i < 5; i++) {
+          paletteData[i * 2] = (palette[i] >> 8) & 0xff;
+          paletteData[i * 2 + 1] = palette[i] & 0xff;
+        }
+        data = concatUInt8Array(data, paletteData);
+      } else {
+        // throw new Error('Unsupported sPLT depth: ' + depth);
+      }
+    }
+    return data;
   }
+
   function packTIME() {
     if (!metadata.lastModificationTime) {
       return new Uint8Array();
@@ -293,7 +324,7 @@ export default function encode(metadata: Metadata) {
   Object.keys(chunkPackers).forEach(function(chunkName) {
     const data = chunkPackers[chunkName]();
     if (data.length > 0 || chunkName === 'IEND') {
-      const nameData = packChunkName(chunkName);
+      const nameData = packString(chunkName);
       const lengthData = packUInt32BE(data.length);
       const typeAndData = concatUInt8Array(nameData, data);
       const calculatedCrc32 = crc32(typeAndData);
