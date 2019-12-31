@@ -2,7 +2,6 @@
  * @since 20180911 17:16
  * @author vivaxy
  *
- * @todo chunk-IEND
  * @todo chunk-IHDR
  * @todo chunk-PLTE
  */
