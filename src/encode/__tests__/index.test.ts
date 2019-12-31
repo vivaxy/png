@@ -3,9 +3,6 @@
  * @author vivaxy
  * @input input.json
  *
- * @todo filter-2
- * @todo filter-3
- * @todo filter-4
  * @todo bit-depth-04
  * @todo bit-depth-08
  * @todo bit-depth-16
