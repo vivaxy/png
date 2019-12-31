@@ -14,7 +14,6 @@
  * @todo chunk-PLTE
  * @todo chunk-sBIT
  * @todo chunk-sPLT
- * @todo chunk-sRGB
  * @todo chunk-tEXt
  * @todo chunk-tIME
  * @todo chunk-tRNS-color-type-0
