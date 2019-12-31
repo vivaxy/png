@@ -26,7 +26,7 @@ export default function encodeIDAT(
   const scanlineWidth = (width * channelPerPixel * depth + 7) >> 3;
   const bitPerPixel = channelPerPixel * depth;
   const bytePerPixel = bitPerPixel >> 3;
-  let prevFilteredLine = new Uint8Array();
+  let prevUnfilteredLine = new Uint8Array();
 
   for (let scanlineIndex = 0; scanlineIndex < scanlineCount; scanlineIndex++) {
     // each line
@@ -103,7 +103,7 @@ export default function encodeIDAT(
       const { sum, filtered } = filter(
         unfilteredLine,
         bytePerPixel,
-        prevFilteredLine,
+        prevUnfilteredLine,
       );
       if (sum < minFilterSum) {
         minFilterSum = sum;
@@ -112,7 +112,7 @@ export default function encodeIDAT(
       }
     }
 
-    prevFilteredLine = filteredLine;
+    prevUnfilteredLine = unfilteredLine;
 
     typedArray = concatUInt8Array(
       typedArray,

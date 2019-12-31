@@ -6,6 +6,7 @@ import crc32 from '../helpers/crc32';
 import encodeIDAT from './encode-idat';
 import Metadata from '../helpers/metadata';
 import PNG_SIGNATURE from '../helpers/signature';
+import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
 import { concatUInt8Array } from '../helpers/typed-array';
 
@@ -123,6 +124,9 @@ export default function encode(metadata: Metadata) {
   }
 
   function packGAMA() {
+    if (metadata.gamma !== undefined) {
+      return packUInt32BE(metadata.gamma * GAMMA_DIVISION);
+    }
     return new Uint8Array();
   }
 

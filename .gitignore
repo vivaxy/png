@@ -6,3 +6,5 @@ node_modules
 coverage.lcov
 coverage
 lib
+src/encode/__tests__/fixtures/*/output.png
+src/encode/__tests__/fixtures/*/decode.json

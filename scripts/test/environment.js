@@ -10,6 +10,7 @@ module.exports = class PNGTestEnvironment extends NodeEnvironment {
   constructor(config, { docblockPragmas, testPath }) {
     super(config);
     this.todo = docblockPragmas.todo || [];
+    this.only = docblockPragmas.only;
     this.input = docblockPragmas.input;
     this.testFilePath = testPath;
   }
@@ -21,6 +22,9 @@ module.exports = class PNGTestEnvironment extends NodeEnvironment {
       onlyDirectories: true,
     });
     const filteredTestcaseNames = testcaseNames.filter((testcaseName) => {
+      if (this.only) {
+        return testcaseName === this.only;
+      }
       return !this.todo.includes(testcaseName);
     });
     this.global.testcases = filteredTestcaseNames.map((testcaseName) => {

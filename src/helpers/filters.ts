@@ -76,7 +76,7 @@ export const filters: {
   [filterType in FILTER_TYPES]: (
     data: Uint8Array,
     bytePerPixel: number,
-    prevFilteredLine: Uint8Array,
+    prevUnfilteredLine: Uint8Array,
   ) => {
     sum: number;
     filtered: Uint8Array;
@@ -96,7 +96,7 @@ export const filters: {
     let sum = 0;
     const filtered = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      const left = filtered[i - bytePerPixel] || 0;
+      const left = data[i - bytePerPixel] || 0;
       filtered[i] = data[i] - left;
       sum += filtered[i];
     }
@@ -108,12 +108,12 @@ export const filters: {
   [FILTER_TYPES.UP](
     data: Uint8Array,
     bytePerPixel: number,
-    prevFilteredLine: Uint8Array,
+    prevUnfilteredLine: Uint8Array,
   ) {
     let sum = 0;
     const filtered = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      const up = prevFilteredLine[i] || 0;
+      const up = prevUnfilteredLine[i] || 0;
       filtered[i] = data[i] - up;
       sum += filtered[i];
     }
@@ -125,13 +125,13 @@ export const filters: {
   [FILTER_TYPES.AVERAGE](
     data: Uint8Array,
     bytePerPixel: number,
-    prevFilteredLine: Uint8Array,
+    prevUnfilteredLine: Uint8Array,
   ) {
     let sum = 0;
     const filtered = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      const left = filtered[i - bytePerPixel] || 0;
-      const above = prevFilteredLine[i] || 0;
+      const left = data[i - bytePerPixel] || 0;
+      const above = prevUnfilteredLine[i] || 0;
       const avg = (left + above) >> 1;
       filtered[i] = data[i] - avg;
       sum += filtered[i];
@@ -144,14 +144,14 @@ export const filters: {
   [FILTER_TYPES.PAETH](
     data: Uint8Array,
     bytePerPixel: number,
-    prevFilteredLine: Uint8Array,
+    prevUnfilteredLine: Uint8Array,
   ) {
     let sum = 0;
     const filtered = new Uint8Array(data.length);
     for (let i = 0; i < data.length; i++) {
-      const left = filtered[i - bytePerPixel] || 0;
-      const above = prevFilteredLine[i] || 0;
-      const upperLeft = prevFilteredLine[i - bytePerPixel] || 0;
+      const left = data[i - bytePerPixel] || 0;
+      const above = prevUnfilteredLine[i] || 0;
+      const upperLeft = prevUnfilteredLine[i - bytePerPixel] || 0;
       const p = paeth(left, above, upperLeft);
       filtered[i] = data[i] - p;
       sum += filtered[i];

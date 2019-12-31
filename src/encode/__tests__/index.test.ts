@@ -2,7 +2,7 @@
  * @since 20180911 17:16
  * @author vivaxy
  * @input input.json
- * @todo filter-1
+ *
  * @todo filter-2
  * @todo filter-3
  * @todo filter-4
@@ -11,7 +11,6 @@
  * @todo bit-depth-16
  * @todo chunk-bKGD
  * @todo chunk-cHRM
- * @todo chunk-gMMA
  * @todo chunk-hIST
  * @todo chunk-IDAT-multiple
  * @todo chunk-IDAT-single
@@ -37,7 +36,10 @@
  * @todo interlace-8x-size
  * @todo interlace-odd-size
  */
+import * as path from 'path';
+import * as fse from 'fs-extra';
 import encode from '..';
+import decode from '../../decode';
 
 // @ts-ignore
 test.each(global.testcases)('decode %s', async function(
@@ -45,5 +47,14 @@ test.each(global.testcases)('decode %s', async function(
   metadataPath,
 ) {
   const metadata = require(metadataPath);
-  expect(encode(metadata)).toMatchSnapshot();
+  const imageBinaryData = encode(metadata);
+  expect(imageBinaryData).toMatchSnapshot();
+  await fse.outputFile(
+    path.join(metadataPath, '..', 'output.png'),
+    imageBinaryData,
+  );
+  await fse.outputFile(
+    path.join(metadataPath, '..', 'decode.json'),
+    JSON.stringify(decode(imageBinaryData), null, 2),
+  );
 });
