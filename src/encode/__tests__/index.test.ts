@@ -19,7 +19,6 @@
  * @todo chunk-tRNS-color-type-2
  * @todo chunk-tRNS-color-type-3
  * @todo chunk-zTXt
- * @todo color-type-2
  * @todo color-type-3
  * @todo color-type-4
  * @todo color-type-6
