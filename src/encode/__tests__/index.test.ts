@@ -5,8 +5,6 @@
  * @todo chunk-bKGD
  * @todo chunk-cHRM
  * @todo chunk-hIST
- * @todo chunk-IDAT-multiple
- * @todo chunk-IDAT-single
  * @todo chunk-IEND
  * @todo chunk-IHDR
  * @todo chunk-iTXt
