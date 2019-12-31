@@ -3,6 +3,7 @@
  * @author vivaxy
  */
 import * as pako from 'pako';
+import rescaleSample from '../helpers/rescale-sample';
 import { concatUInt8Array } from '../helpers/typed-array';
 import { channelToTypedArray } from '../helpers/channels';
 import { filters, FILTER_TYPES } from '../helpers/filters';
@@ -38,7 +39,13 @@ export default function encodeIDAT(
 
       // channels
       if (colorType === COLOR_TYPES.GRAYSCALE) {
+        channels.push(rescaleSample(pixel[0], 8, depth));
       } else if (colorType === COLOR_TYPES.TRUE_COLOR) {
+        channels.push(
+          rescaleSample(pixel[0], 8, depth),
+          rescaleSample(pixel[1], 8, depth),
+          rescaleSample(pixel[2], 8, depth),
+        );
       } else if (colorType === COLOR_TYPES.PALETTE) {
         if (!palette) {
           throw new Error('Palette is required');
@@ -64,7 +71,17 @@ export default function encodeIDAT(
         }
         channels.push(paletteIndex);
       } else if (colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
+        channels.push(
+          rescaleSample(pixel[0], 8, depth),
+          rescaleSample(pixel[3], 8, depth),
+        );
       } else if (colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
+        channels.push(
+          rescaleSample(pixel[0], 8, depth),
+          rescaleSample(pixel[1], 8, depth),
+          rescaleSample(pixel[2], 8, depth),
+          rescaleSample(pixel[3], 8, depth),
+        );
       }
 
       // set channels to unfilteredLine

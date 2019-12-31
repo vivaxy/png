@@ -59,7 +59,8 @@
     ],
     "collectCoverageFrom": [
       "src/**/*.ts"
-    ]
+    ],
+    "testEnvironment": "<rootDir>/scripts/test/environment.js"
   },
   "commitlint": {
     "extends": [

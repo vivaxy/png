@@ -145,7 +145,7 @@ export default function decodeIDAT(
         ((passWidth * bitPerPixel + 7) >> 3) + FILTER_LENGTH;
 
       // unfilter
-      const filterType = inflatedData[dataIndex + 0];
+      const filterType = inflatedData[dataIndex];
       if (!(filterType in FILTER_TYPES)) {
         throw new Error('Unsupported filter type: ' + filterType);
       }

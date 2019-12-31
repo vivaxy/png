@@ -1,0 +1,31 @@
+/**
+ * @since 2019-12-31 11:27
+ * @author vivaxy
+ */
+const path = require('path');
+const glob = require('fast-glob');
+const NodeEnvironment = require('jest-environment-node');
+
+module.exports = class PNGTestEnvironment extends NodeEnvironment {
+  constructor(config, { docblockPragmas, testPath }) {
+    super(config);
+    this.todo = docblockPragmas.todo || [];
+    this.input = docblockPragmas.input;
+    this.testFilePath = testPath;
+  }
+
+  async setup() {
+    const fixturesPath = path.join(this.testFilePath, '..', 'fixtures');
+    const testcaseNames = await glob('*', {
+      cwd: fixturesPath,
+      onlyDirectories: true,
+    });
+    const filteredTestcaseNames = testcaseNames.filter((testcaseName) => {
+      return !this.todo.includes(testcaseName);
+    });
+    this.global.testcases = filteredTestcaseNames.map((testcaseName) => {
+      return [testcaseName, path.join(fixturesPath, testcaseName, this.input)];
+    });
+    await super.setup();
+  }
+};
