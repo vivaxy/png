@@ -4,7 +4,6 @@
  *
  * @todo chunk-IEND
  * @todo chunk-IHDR
- * @todo chunk-iTXt
  * @todo chunk-PLTE
  */
 import * as path from 'path';

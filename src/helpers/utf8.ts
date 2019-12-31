@@ -3,7 +3,46 @@
  * @author vivaxy
  * @see https://gist.github.com/pascaldekloe/62546103a1576803dade9269ccf76330
  */
-export default function decodeUTF8(bytes: Uint8Array) {
+export function encode(string: string) {
+  let i = 0;
+  let bytes = new Uint8Array(string.length * 4);
+  for (let ci = 0; ci != string.length; ci++) {
+    let c = string.charCodeAt(ci);
+    if (c < 128) {
+      bytes[i++] = c;
+      continue;
+    }
+    if (c < 2048) {
+      bytes[i++] = (c >> 6) | 192;
+    } else {
+      if (c > 0xd7ff && c < 0xdc00) {
+        if (++ci >= string.length) {
+          throw new Error('UTF-8 encode: incomplete surrogate pair');
+        }
+        const c2 = string.charCodeAt(ci);
+        if (c2 < 0xdc00 || c2 > 0xdfff) {
+          throw new Error(
+            'UTF-8 encode: second surrogate character 0x' +
+              c2.toString(16) +
+              ' at index ' +
+              ci +
+              ' out of range',
+          );
+        }
+        c = 0x10000 + ((c & 0x03ff) << 10) + (c2 & 0x03ff);
+        bytes[i++] = (c >> 18) | 240;
+        bytes[i++] = ((c >> 12) & 63) | 128;
+      } else {
+        bytes[i++] = (c >> 12) | 224;
+      }
+      bytes[i++] = ((c >> 6) & 63) | 128;
+    }
+    bytes[i++] = (c & 63) | 128;
+  }
+  return bytes.subarray(0, i);
+}
+
+export function decode(bytes: Uint8Array) {
   let i = 0;
   let s = '';
   while (i < bytes.length) {

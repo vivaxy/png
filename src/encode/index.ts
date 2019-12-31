@@ -10,8 +10,12 @@ import PNG_SIGNATURE from '../helpers/signature';
 import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
 import rescaleSample from '../helpers/rescale-sample';
+import { encode as encodeUTF8 } from '../helpers/utf8';
 import { concatUInt8Array } from '../helpers/typed-array';
 import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
+
+const NULL_SEPARATOR = 0;
+const COMPRESSION_METHOD = 0;
 
 export default function encode(metadata: Metadata) {
   // Signature
@@ -179,8 +183,8 @@ export default function encode(metadata: Metadata) {
       return new Uint8Array();
     }
     let data = packString(metadata.icc.name);
-    data = concatUInt8Array(data, packUInt8(0));
-    data = concatUInt8Array(data, packUInt8(0));
+    data = concatUInt8Array(data, packUInt8(NULL_SEPARATOR));
+    data = concatUInt8Array(data, packUInt8(COMPRESSION_METHOD));
     data = concatUInt8Array(data, pako.deflate(metadata.icc.profile));
     return data;
   }
@@ -300,8 +304,10 @@ export default function encode(metadata: Metadata) {
     if (!metadata.suggestedPalette) {
       return new Uint8Array();
     }
-    let data = packString(metadata.suggestedPalette.name);
-    data = concatUInt8Array(data, packUInt8(0));
+    let data = concatUInt8Array(
+      packString(metadata.suggestedPalette.name),
+      packUInt8(NULL_SEPARATOR),
+    );
     data = concatUInt8Array(data, packUInt8(metadata.suggestedPalette.depth));
     for (let i = 0; i < metadata.suggestedPalette.palette.length; i++) {
       const palette = metadata.suggestedPalette.palette[i];
@@ -363,7 +369,10 @@ export default function encode(metadata: Metadata) {
   // tEXt
   if (metadata.text) {
     Object.keys(metadata.text).forEach(function(keyword) {
-      let data = concatUInt8Array(packString(keyword), packUInt8(0));
+      let data = concatUInt8Array(
+        packString(keyword),
+        packUInt8(NULL_SEPARATOR),
+      );
       data = concatUInt8Array(data, packString(metadata.text![keyword]));
       addChunk('tEXt', data);
     });
@@ -372,13 +381,49 @@ export default function encode(metadata: Metadata) {
   // zTXt
   if (metadata.compressedText) {
     Object.keys(metadata.compressedText).forEach(function(keyword) {
-      let data = concatUInt8Array(packString(keyword), packUInt8(0));
-      data = concatUInt8Array(data, packUInt8(0));
+      let data = concatUInt8Array(
+        packString(keyword),
+        packUInt8(NULL_SEPARATOR),
+      );
+      data = concatUInt8Array(data, packUInt8(COMPRESSION_METHOD));
       data = concatUInt8Array(
         data,
         pako.deflate(packString(metadata.compressedText![keyword])),
       );
       addChunk('zTXt', data);
+    });
+  }
+
+  // iTXt
+  if (metadata.internationalText) {
+    Object.keys(metadata.internationalText).forEach(function(keyword) {
+      const {
+        languageTag,
+        translatedKeyword,
+        text,
+      } = metadata.internationalText![keyword];
+
+      const textData = encodeUTF8(text);
+      const compressedTextData = pako.deflate(textData);
+      const compressionFlag =
+        compressedTextData.length < textData.length ? 1 : 0;
+
+      let data = concatUInt8Array(
+        packString(keyword),
+        packUInt8(NULL_SEPARATOR),
+      );
+      data = concatUInt8Array(data, packUInt8(compressionFlag));
+      data = concatUInt8Array(data, packUInt8(COMPRESSION_METHOD));
+      data = concatUInt8Array(data, packString(languageTag));
+      data = concatUInt8Array(data, packUInt8(NULL_SEPARATOR));
+      data = concatUInt8Array(data, encodeUTF8(translatedKeyword));
+      data = concatUInt8Array(data, packUInt8(NULL_SEPARATOR));
+      data = concatUInt8Array(
+        data,
+        compressionFlag ? compressedTextData : textData,
+      );
+
+      addChunk('iTXt', data);
     });
   }
 

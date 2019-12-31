@@ -30101,32 +30101,32 @@ Object {
   "internationalText": Object {
     "Author": Object {
       "languageTag": "ja",
-      "text": " Willem van Schaik (willem@schaik.com)",
+      "text": "Willem van Schaik (willem@schaik.com)",
       "translatedKeyword": "著者",
     },
     "Copyright": Object {
       "languageTag": "ja",
-      "text": " 著作権ウィレムヴァンシャイク、カナダ2011",
+      "text": "著作権ウィレムヴァンシャイク、カナダ2011",
       "translatedKeyword": "本文へ",
     },
     "Description": Object {
       "languageTag": "ja",
-      "text": " PNG形式の様々な色の種類をテストするために作成されたイメージのセットのコンパイル。含まれているのは透明度のフォーマットで、アルファチャネルを持つ、白黒、カラー、パレットです。すべてのビット深度が存在している仕様に従ったことができました。",
+      "text": "PNG形式の様々な色の種類をテストするために作成されたイメージのセットのコンパイル。含まれているのは透明度のフォーマットで、アルファチャネルを持つ、白黒、カラー、パレットです。すべてのビット深度が存在している仕様に従ったことができました。",
       "translatedKeyword": "概要",
     },
     "Disclaimer": Object {
       "languageTag": "ja",
-      "text": " フリーウェア。",
+      "text": "フリーウェア。",
       "translatedKeyword": "免責事項",
     },
     "Software": Object {
       "languageTag": "ja",
-      "text": " \\"pnmtopng\\"を使用してNeXTstation色上に作成されます。",
+      "text": "\\"pnmtopng\\"を使用してNeXTstation色上に作成されます。",
       "translatedKeyword": "ソフトウェア",
     },
     "Title": Object {
       "languageTag": "ja",
-      "text": " PngSuite",
+      "text": "PngSuite",
       "translatedKeyword": "タイトル",
     },
   },

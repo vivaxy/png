@@ -6,12 +6,12 @@ import * as pako from 'pako';
 
 import crc32 from '../helpers/crc32';
 import decodeIDAT from './decode-idat';
-import decodeUTF8 from './decode-utf8';
 import Metadata from '../helpers/metadata';
-import rescaleSample from '../helpers/rescale-sample';
 import PNG_SIGNATURE from '../helpers/signature';
 import { GAMMA_DIVISION } from '../helpers/gamma';
 import { COLOR_TYPES } from '../helpers/color-types';
+import rescaleSample from '../helpers/rescale-sample';
+import { decode as decodeUTF8 } from '../helpers/utf8';
 import { concatUInt8Array } from '../helpers/typed-array';
 import { CHROMATICITIES_DIVISION } from '../helpers/chromaticities';
 
@@ -51,8 +51,9 @@ export default function decode(arrayBuffer: ArrayBuffer) {
 
   function readBytesBeforeNull() {
     const results = [];
-    while (typedArray[index] !== 0) {
-      results.push(typedArray[index++]);
+    let byte: number = 0;
+    while ((byte = typedArray[index++]) !== 0) {
+      results.push(byte);
     }
     return new Uint8Array(results);
   }

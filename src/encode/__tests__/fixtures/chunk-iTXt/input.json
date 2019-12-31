@@ -6,39 +6,6 @@
   "compression": 0,
   "interlace": 0,
   "filter": 0,
-  "gamma": 1,
-  "internationalText": {
-    "Title": {
-      "languageTag": "ja",
-      "translatedKeyword": "タイトル",
-      "text": "\u0000PngSuite"
-    },
-    "Author": {
-      "languageTag": "ja",
-      "translatedKeyword": "著者",
-      "text": "\u0000Willem van Schaik (willem@schaik.com)"
-    },
-    "Copyright": {
-      "languageTag": "ja",
-      "translatedKeyword": "本文へ",
-      "text": "\u0000著作権ウィレムヴァンシャイク、カナダ2011"
-    },
-    "Description": {
-      "languageTag": "ja",
-      "translatedKeyword": "概要",
-      "text": "\u0000PNG形式の様々な色の種類をテストするために作成されたイメージのセットのコンパイル。含まれているのは透明度のフォーマットで、アルファチャネルを持つ、白黒、カラー、パレットです。すべてのビット深度が存在している仕様に従ったことができました。"
-    },
-    "Software": {
-      "languageTag": "ja",
-      "translatedKeyword": "ソフトウェア",
-      "text": "\u0000\"pnmtopng\"を使用してNeXTstation色上に作成されます。"
-    },
-    "Disclaimer": {
-      "languageTag": "ja",
-      "translatedKeyword": "免責事項",
-      "text": "\u0000フリーウェア。"
-    }
-  },
   "data": [
     0,
     0,
@@ -4136,5 +4103,38 @@
     238,
     238,
     255
-  ]
+  ],
+  "gamma": 1,
+  "internationalText": {
+    "Title": {
+      "languageTag": "ja",
+      "translatedKeyword": "タイトル",
+      "text": "PngSuite"
+    },
+    "Author": {
+      "languageTag": "ja",
+      "translatedKeyword": "著者",
+      "text": "Willem van Schaik (willem@schaik.com)"
+    },
+    "Copyright": {
+      "languageTag": "ja",
+      "translatedKeyword": "本文へ",
+      "text": "著作権ウィレムヴァンシャイク、カナダ2011"
+    },
+    "Description": {
+      "languageTag": "ja",
+      "translatedKeyword": "概要",
+      "text": "PNG形式の様々な色の種類をテストするために作成されたイメージのセットのコンパイル。含まれているのは透明度のフォーマットで、アルファチャネルを持つ、白黒、カラー、パレットです。すべてのビット深度が存在している仕様に従ったことができました。"
+    },
+    "Software": {
+      "languageTag": "ja",
+      "translatedKeyword": "ソフトウェア",
+      "text": "\"pnmtopng\"を使用してNeXTstation色上に作成されます。"
+    },
+    "Disclaimer": {
+      "languageTag": "ja",
+      "translatedKeyword": "免責事項",
+      "text": "フリーウェア。"
+    }
+  }
 }
