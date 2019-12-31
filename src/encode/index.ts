@@ -2,6 +2,7 @@
  * @since 2019-10-30 03:01
  * @author vivaxy
  */
+import * as pako from 'pako';
 import crc32 from '../helpers/crc32';
 import encodeIDAT from './encode-idat';
 import Metadata from '../helpers/metadata';
@@ -176,7 +177,15 @@ export default function encode(metadata: Metadata) {
   }
 
   function packICCP() {
-    return new Uint8Array();
+    // TODO: Missing testcase
+    if (!metadata.icc) {
+      return new Uint8Array();
+    }
+    let data = packString(metadata.icc.name);
+    data = concatUInt8Array(data, packUInt8(0));
+    data = concatUInt8Array(data, packUInt8(0));
+    data = concatUInt8Array(data, pako.deflate(metadata.icc.profile));
+    return data;
   }
 
   function packSBIT() {
