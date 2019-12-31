@@ -281,9 +281,17 @@ export default function encode(metadata: Metadata) {
 
     return new Uint8Array();
   }
+
   function packHIST() {
+    const data = [];
+    if (metadata.histogram) {
+      metadata.histogram.forEach(function(value) {
+        data.push((value >> 8) & 0xff, value & 0xff);
+      });
+    }
     return new Uint8Array();
   }
+
   function packPHYS() {
     let data = new Uint8Array();
     if (metadata.physicalDimensions) {
