@@ -19,7 +19,6 @@
  * @todo chunk-tRNS-color-type-2
  * @todo chunk-tRNS-color-type-3
  * @todo chunk-zTXt
- * @todo color-type-6
  */
 import * as path from 'path';
 import * as fse from 'fs-extra';
