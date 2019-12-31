@@ -9,111 +9,8 @@ import {
 } from '../helpers/color-types';
 import { FILTER_TYPES, FILTER_LENGTH, unfilters } from '../helpers/filters';
 import rescaleSample from '../helpers/rescale-sample';
-import { typedArrayToChannel } from '../helpers/channels';
-
-const ADAM7_PASSES = [
-  {
-    x: [0],
-    y: [0],
-  },
-  {
-    x: [4],
-    y: [0],
-  },
-  {
-    x: [0, 4],
-    y: [4],
-  },
-  {
-    x: [2, 6],
-    y: [0, 4],
-  },
-  {
-    x: [0, 2, 4, 6],
-    y: [2, 6],
-  },
-  {
-    x: [1, 3, 5, 7],
-    y: [0, 2, 4, 6],
-  },
-  {
-    x: [0, 1, 2, 3, 4, 5, 6, 7],
-    y: [1, 3, 5, 7],
-  },
-];
-
-type Image = {
-  passWidth: number;
-  passHeight: number;
-  passIndex: number;
-};
-
-function buildImages(
-  interlace: number,
-  width: number,
-  height: number,
-): Image[] {
-  if (!interlace) {
-    return [
-      {
-        passWidth: width,
-        passHeight: height,
-        passIndex: 0,
-      },
-    ];
-  }
-  const images: Image[] = [];
-  ADAM7_PASSES.forEach(function({ x, y }, passIndex) {
-    const remainingX = width % 8;
-    const remainingY = height % 8;
-    const repeatX = (width - remainingX) >> 3;
-    const repeatY = (height - remainingY) >> 3;
-    let passWidth = repeatX * x.length;
-    for (let i = 0; i < x.length; i++) {
-      if (x[i] < remainingX) {
-        passWidth++;
-      } else {
-        break;
-      }
-    }
-    let passHeight = repeatY * y.length;
-    for (let i = 0; i < y.length; i++) {
-      if (y[i] < remainingY) {
-        passHeight++;
-      } else {
-        break;
-      }
-    }
-    if (passWidth && passHeight) {
-      images.push({
-        passWidth: passWidth,
-        passHeight: passHeight,
-        passIndex: passIndex,
-      });
-    }
-  });
-  return images;
-}
-
-function getPixelIndex(
-  interlace: number,
-  width: number,
-  widthIndex: number,
-  heightIndex: number,
-  passIndex: number,
-): number {
-  if (!interlace) {
-    return (width * heightIndex + widthIndex) << 2;
-  }
-  const pass = ADAM7_PASSES[passIndex];
-  const remainingX = widthIndex % pass.x.length;
-  const remainingY = heightIndex % pass.y.length;
-  const repeatX = (widthIndex - remainingX) / pass.x.length;
-  const repeatY = (heightIndex - remainingY) / pass.y.length;
-  const offsetX = pass.x[remainingX];
-  const offsetY = pass.y[remainingY];
-  return (width * ((repeatY << 3) + offsetY) + (repeatX << 3) + offsetX) << 2;
-}
+import { typedArrayToChannels } from '../helpers/channels';
+import { buildImages, getPixelIndex } from '../helpers/interlace';
 
 export default function decodeIDAT(
   deflatedData: Uint8Array,
@@ -159,7 +56,7 @@ export default function decodeIDAT(
 
       // to channels
       let channelIndex = 0;
-      const channels = typedArrayToChannel(unfilteredLine, depth);
+      const channels = typedArrayToChannels(unfilteredLine, depth);
 
       function getPixelFromChannels() {
         if (colorType === COLOR_TYPES.GRAYSCALE) {
@@ -216,9 +113,9 @@ export default function decodeIDAT(
         const pixelIndex = getPixelIndex(
           interlace,
           width,
+          passIndex,
           widthIndex,
           heightIndex,
-          passIndex,
         );
         for (let i = 0; i < pixel.length; i++) {
           pixels[pixelIndex + i] = pixel[i];

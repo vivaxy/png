@@ -24,8 +24,6 @@
  * @todo color-type-3
  * @todo color-type-4
  * @todo color-type-6
- * @todo interlace-8x-size
- * @todo interlace-odd-size
  */
 import * as path from 'path';
 import * as fse from 'fs-extra';
@@ -33,7 +31,7 @@ import encode from '..';
 import decode from '../../decode';
 
 // @ts-ignore
-test.each(global.testcases)('decode %s', async function(
+test.each(global.testcases)('encode %s', async function(
   testcaseName,
   fixturePath,
 ) {

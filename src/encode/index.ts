@@ -87,6 +87,7 @@ export default function encode(metadata: Metadata) {
     return encodeIDAT(
       metadata.data,
       metadata.width,
+      metadata.height,
       metadata.colorType,
       metadata.depth,
       metadata.interlace,

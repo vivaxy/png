@@ -2,7 +2,7 @@
  * @since 2019-12-30 02:36
  * @author vivaxy
  */
-export function typedArrayToChannel(
+export function typedArrayToChannels(
   typedArray: Uint8Array,
   depth: number,
 ): number[] {
@@ -46,12 +46,12 @@ export function typedArrayToChannel(
   return channels;
 }
 
-export function channelToTypedArray(
+export function channelsToTypedArray(
   channels: number[],
   depth: number,
-  scanlineWidth: number,
+  dataLength: number,
 ) {
-  const typedArray = new Uint8Array(scanlineWidth);
+  const typedArray = new Uint8Array(dataLength);
   let typedArrayIndex = 0;
   let channelIndex = 0;
   while (channelIndex < channels.length) {
