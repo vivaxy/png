@@ -2,6 +2,38 @@
 
 All notable changes to this project will be documented in this file. See [standard-version](https://github.com/conventional-changelog/standard-version) for commit guidelines.
 
+## [1.2.0](https://github.com/vivaxy/png/compare/v1.1.0...v1.2.0) (2019-12-31)
+
+
+### Features
+
+* **encode:** :sparkles: support bit depth 2 ([bb234bd](https://github.com/vivaxy/png/commit/bb234bd683ac691bb91bb2e06bce626a51790d62))
+* **encode:** :sparkles: support bKGD ([6514fc4](https://github.com/vivaxy/png/commit/6514fc4f8daed41bd6b0ad8301d76b6330e11aed))
+* **encode:** :sparkles: support cHRM ([ad1c959](https://github.com/vivaxy/png/commit/ad1c95940b261e038847cb2cfd6bf4ab31b441b7))
+* **encode:** :sparkles: support filter 0, 1, 2, 3, 4 ([3087f67](https://github.com/vivaxy/png/commit/3087f679983515f41bc255490e790a5942fe5ed5))
+* **encode:** :sparkles: support gMMA and filter 1 ([f379167](https://github.com/vivaxy/png/commit/f3791675148e8e89234f8b1b5c077627fb82f5b0))
+* **encode:** :sparkles: support hIST ([fd6e9a7](https://github.com/vivaxy/png/commit/fd6e9a76d38c4413acaebcd69b0f9296fccbaf0d))
+* **encode:** :sparkles: support iCCP ([d689c00](https://github.com/vivaxy/png/commit/d689c00eb11c25f7f3554dae3686a9da8691ce00))
+* **encode:** :sparkles: support IDAT, color type 3 and filter 0 ([506c2a2](https://github.com/vivaxy/png/commit/506c2a2c1dfa983de6af131c7973c8558eefeafd))
+* **encode:** :sparkles: support IHDR ([9e95e10](https://github.com/vivaxy/png/commit/9e95e10bab7a61b1bfa3543c5422823cc0c2e524))
+* **encode:** :sparkles: support interlace ([496a332](https://github.com/vivaxy/png/commit/496a3325cd18dab639b0ee6366d64ac9aa6efa9e))
+* **encode:** :sparkles: support iTXt ([375c749](https://github.com/vivaxy/png/commit/375c7497ff51ec0ac206885490b85cebce8b0db8))
+* **encode:** :sparkles: support PLTE ([e14dca8](https://github.com/vivaxy/png/commit/e14dca81f7854c3601756ef31c4669491d9bfa4b))
+* **encode:** :sparkles: support pYHs ([e0473f0](https://github.com/vivaxy/png/commit/e0473f0afc2ed2ce3426f98c433b1b48afebd61b))
+* **encode:** :sparkles: support signature ([ebecb94](https://github.com/vivaxy/png/commit/ebecb94b73361918eeaf398f599677050ddb3b3b))
+* **encode:** :sparkles: support sPLT ([56a48a7](https://github.com/vivaxy/png/commit/56a48a7752eb7adea21f905df89db0fd50e9b606))
+* **encode:** :sparkles: support sRGB ([0e3f570](https://github.com/vivaxy/png/commit/0e3f570ba609a625fbdc31442de76fdcb7e0803c))
+* **encode:** :sparkles: support tEXt ([3dc0e2e](https://github.com/vivaxy/png/commit/3dc0e2eb64633108a8c31d06575eaf3937342a8d))
+* **encode:** :sparkles: support tIME ([613dfdd](https://github.com/vivaxy/png/commit/613dfddb9e258baf44f9f6544308fb94db7cd04c))
+* **encode:** :sparkles: support tRNS with color type 0 ([e53c063](https://github.com/vivaxy/png/commit/e53c063a4e90608170d89437fd62b154c5f78973))
+* **encode:** :sparkles: support tRNS with color type 2 ([1bf65a4](https://github.com/vivaxy/png/commit/1bf65a40fbfa27c921f25fa54349244c4173b276))
+* **encode:** :sparkles: support zTXt ([2b6fbe8](https://github.com/vivaxy/png/commit/2b6fbe8b937523d9f4835b6f97dba7e8eede959a))
+
+
+### Bug Fixes
+
+* **encode:** :bug: fix filter 1, 3 and 4 ([cae9672](https://github.com/vivaxy/png/commit/cae9672706c18f04b9c219845373ea510e01a320))
+
 ## [1.1.0](https://github.com/vivaxy/png/compare/v1.0.0...v1.1.0) (2019-12-29)
 
 
