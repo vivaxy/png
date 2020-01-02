@@ -1,0 +1,15 @@
+{
+  "width": 1,
+  "height": 1,
+  "depth": 16,
+  "colorType": 0,
+  "compression": 0,
+  "interlace": 0,
+  "filter": 0,
+  "suggestedPalette": {
+    "name": "16-depth",
+    "depth": 16,
+    "palette": [[0, 0, 0, 255, 0]]
+  },
+  "data": [0, 0, 0, 255]
+}

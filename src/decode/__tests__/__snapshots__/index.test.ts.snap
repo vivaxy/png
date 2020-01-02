@@ -34351,6 +34351,30 @@ Object {
 }
 `;
 
+exports[`decode chunk-sBIT-color-type-0 1`] = `
+Object {
+  "colorType": 0,
+  "compression": 0,
+  "data": Array [
+    0,
+    0,
+    0,
+    255,
+  ],
+  "depth": 4,
+  "filter": 0,
+  "height": 1,
+  "interlace": 0,
+  "significantBits": Array [
+    3,
+    3,
+    3,
+    4,
+  ],
+  "width": 1,
+}
+`;
+
 exports[`decode chunk-sBIT-color-type-2 1`] = `
 Object {
   "colorType": 2,
@@ -42755,7 +42779,55 @@ Object {
 }
 `;
 
-exports[`decode chunk-sPLT 1`] = `
+exports[`decode chunk-sBIT-color-type-4 1`] = `
+Object {
+  "colorType": 4,
+  "compression": 0,
+  "data": Array [
+    255,
+    255,
+    255,
+    0,
+  ],
+  "depth": 8,
+  "filter": 0,
+  "height": 1,
+  "interlace": 0,
+  "significantBits": Array [
+    5,
+    5,
+    5,
+    8,
+  ],
+  "width": 1,
+}
+`;
+
+exports[`decode chunk-sBIT-color-type-6 1`] = `
+Object {
+  "colorType": 6,
+  "compression": 0,
+  "data": Array [
+    255,
+    0,
+    128,
+    128,
+  ],
+  "depth": 8,
+  "filter": 0,
+  "height": 1,
+  "interlace": 0,
+  "significantBits": Array [
+    7,
+    7,
+    7,
+    8,
+  ],
+  "width": 1,
+}
+`;
+
+exports[`decode chunk-sPLT-depth-08 1`] = `
 Object {
   "colorType": 0,
   "compression": 0,
@@ -48381,6 +48453,37 @@ Object {
     ],
   },
   "width": 32,
+}
+`;
+
+exports[`decode chunk-sPLT-depth-16 1`] = `
+Object {
+  "colorType": 0,
+  "compression": 0,
+  "data": Array [
+    0,
+    0,
+    0,
+    255,
+  ],
+  "depth": 16,
+  "filter": 0,
+  "height": 1,
+  "interlace": 0,
+  "suggestedPalette": Object {
+    "depth": 16,
+    "name": "16-depth",
+    "palette": Array [
+      Array [
+        0,
+        0,
+        0,
+        255,
+        0,
+      ],
+    ],
+  },
+  "width": 1,
 }
 `;
 

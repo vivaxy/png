@@ -1,0 +1,11 @@
+{
+  "width": 1,
+  "height": 1,
+  "depth": 8,
+  "colorType": 6,
+  "compression": 0,
+  "interlace": 0,
+  "filter": 0,
+  "data": [255, 0, 128, 128],
+  "significantBits": [7, 7, 7, 8]
+}

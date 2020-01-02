@@ -208,7 +208,7 @@ export default function encode(metadata: Metadata) {
     if (metadata.colorType === COLOR_TYPES.GRAYSCALE_WITH_ALPHA) {
       return concatUInt8Array(
         packUInt8(metadata.significantBits[0]),
-        packUInt8(metadata.significantBits[1]),
+        packUInt8(metadata.significantBits[3]),
       );
     }
     if (metadata.colorType === COLOR_TYPES.TRUE_COLOR_WITH_ALPHA) {
@@ -433,14 +433,6 @@ export default function encode(metadata: Metadata) {
       addChunk(chunkName, data);
     }
   });
-
-  function packZTXT() {
-    return new Uint8Array();
-  }
-
-  function packITXT() {
-    return new Uint8Array();
-  }
 
   return typedArray;
 }
