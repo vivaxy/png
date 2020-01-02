@@ -232,7 +232,6 @@ export default function decode(arrayBuffer: ArrayBuffer) {
   }
 
   function parseICCP(length: number) {
-    // TODO: missing testcase
     const endIndex = index + length;
     const profileName = readStringBeforeNull(80);
     const compressionMethod = readUInt8();
@@ -244,7 +243,7 @@ export default function decode(arrayBuffer: ArrayBuffer) {
     const profile = readCompressedData(endIndex);
     metadata.icc = {
       name: profileName,
-      profile,
+      profile: Array.from(profile),
     };
   }
 

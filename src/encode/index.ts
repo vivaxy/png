@@ -178,7 +178,6 @@ export default function encode(metadata: Metadata) {
   }
 
   function packICCP() {
-    // TODO: Missing testcase
     if (!metadata.icc) {
       return new Uint8Array();
     }

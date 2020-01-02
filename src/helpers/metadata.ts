@@ -37,7 +37,7 @@ type Metadata = {
   icc?: {
     // Embedded ICC profile
     name: string;
-    profile: Uint8Array;
+    profile: number[];
   };
   significantBits?: [number, number, number, number]; // Significant bits
   sRGB?: number; // Standard RGB color space rendering intent
