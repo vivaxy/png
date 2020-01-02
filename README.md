@@ -24,7 +24,7 @@
 # Usage
 
 ```js
-import png from '@vivaxy/png';
+import * as png from '@vivaxy/png';
 
 const metadata = png.decode(imageBuffer);
 const imageBuffer = png.encode(metadata);
