@@ -32,6 +32,10 @@ const imageBuffer = png.encode(metadata);
 
 See `metadata` type definition in [metadata.ts](src/helpers/metadata.ts).
 
+# Articles
+
+- [Decoding A PNG Image with JavaScript Step by Step](https://vivaxyblog.github.io/2019/11/07/decode-a-png-image-with-javascript.html) 中文版：[一步一步解码 PNG 图片](https://vivaxyblog.github.io/2019/12/07/decode-a-png-image-with-javascript-cn.html)
+
 # Prior Art
 
 - [PngSuite - the official set of PNG test images](http://www.schaik.com/pngsuite/)
