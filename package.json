@@ -95,7 +95,7 @@
   "devDependencies": {
     "@commitlint/cli": "^8.2.0",
     "@commitlint/config-conventional": "^8.2.0",
-    "@types/fs-extra": "^8.0.1",
+    "@types/fs-extra": "^9.0.0",
     "@types/jest": "^25.0.0",
     "@types/pako": "^1.0.1",
     "fast-glob": "^3.1.1",

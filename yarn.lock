@@ -803,10 +803,10 @@
   resolved "https://registry.npmjs.org/@types/color-name/-/color-name-1.1.1.tgz#1c1261bbeaa10a8055bbc5d8ab84b7b2afc846a0"
   integrity sha512-rr+OQyAjxze7GgWrSaJwydHStIhHq2lvY3BOC2Mj7KnzI7XK0Uw1TOOdI9lDoajEbSWLiYgoo4f1R51erQfhPQ==
 
-"@types/fs-extra@^8.0.1":
-  version "8.0.1"
-  resolved "https://registry.npmjs.org/@types/fs-extra/-/fs-extra-8.0.1.tgz#a2378d6e7e8afea1564e44aafa2e207dadf77686"
-  integrity sha512-J00cVDALmi/hJOYsunyT52Hva5TnJeKP5yd1r+mH/ZU0mbYZflR0Z5kw5kITtKTRYMhm1JMClOFYdHnQszEvqw==
+"@types/fs-extra@^9.0.0":
+  version "9.0.0"
+  resolved "https://registry.npmjs.org/@types/fs-extra/-/fs-extra-9.0.0.tgz#02b9aa0cdbeedc997642b6736fe48b8e4c271895"
+  integrity sha512-xCbDUSZArlmMjiJdczt8AFNH2MwcMb/pj/HKja1hx3u1qzOUINcJktQMGoGVlgFnzxnuCahxKFlcRBkSAcm33g==
   dependencies:
     "@types/node" "*"
 
