@@ -4098,10 +4098,10 @@ pad@^3.2.0:
   dependencies:
     wcwidth "^1.0.1"
 
-pako@^1.0.10:
-  version "1.0.10"
-  resolved "https://registry.npmjs.org/pako/-/pako-1.0.10.tgz#4328badb5086a426aa90f541977d4955da5c9732"
-  integrity sha512-0DTvPVU3ed8+HNXOu5Bs+o//Mbdj9VNQMUOe9oKCwh8l0GNwpTDMKCWbRjgtD291AWnkAgkqA/LOnQS8AmS1tw==
+pako@^2.0.0:
+  version "2.0.2"
+  resolved "https://registry.npmjs.org/pako/-/pako-2.0.2.tgz#8a72af7a93431ef22aa97e0d53b0acaa3c689220"
+  integrity sha512-9e8DRI3+dRLomCmMBAH30B2ejh+blwXr7VmMEx/pVFZlSDA7oyI8uKMhKXr8IrZpoxBF2YlxUvhqRXzTT1i0NA==
 
 parent-module@^1.0.0:
   version "1.0.1"
