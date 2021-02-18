@@ -155,9 +155,9 @@ export default function encode(metadata: Metadata) {
       'red',
       'green',
       'blue',
-    ] as (keyof typeof chromaticities)[]).forEach(function(color) {
+    ] as (keyof typeof chromaticities)[]).forEach(function (color) {
       (['x', 'y'] as (keyof typeof chromaticities[typeof color])[]).forEach(
-        function(axis) {
+        function (axis) {
           data = concatUInt8Array(
             data,
             packUInt32BE(
@@ -184,7 +184,10 @@ export default function encode(metadata: Metadata) {
     let data = packString(metadata.icc.name);
     data = concatUInt8Array(data, packUInt8(NULL_SEPARATOR));
     data = concatUInt8Array(data, packUInt8(COMPRESSION_METHOD));
-    data = concatUInt8Array(data, pako.deflate(metadata.icc.profile));
+    data = concatUInt8Array(
+      data,
+      pako.deflate(new Uint8Array(metadata.icc.profile)),
+    );
     return data;
   }
 
@@ -273,7 +276,7 @@ export default function encode(metadata: Metadata) {
   function packHIST() {
     const data = [];
     if (metadata.histogram) {
-      metadata.histogram.forEach(function(value) {
+      metadata.histogram.forEach(function (value) {
         data.push((value >> 8) & 0xff, value & 0xff);
       });
     }
@@ -367,7 +370,7 @@ export default function encode(metadata: Metadata) {
 
   // tEXt
   if (metadata.text) {
-    Object.keys(metadata.text).forEach(function(keyword) {
+    Object.keys(metadata.text).forEach(function (keyword) {
       let data = concatUInt8Array(
         packString(keyword),
         packUInt8(NULL_SEPARATOR),
@@ -379,7 +382,7 @@ export default function encode(metadata: Metadata) {
 
   // zTXt
   if (metadata.compressedText) {
-    Object.keys(metadata.compressedText).forEach(function(keyword) {
+    Object.keys(metadata.compressedText).forEach(function (keyword) {
       let data = concatUInt8Array(
         packString(keyword),
         packUInt8(NULL_SEPARATOR),
@@ -395,7 +398,7 @@ export default function encode(metadata: Metadata) {
 
   // iTXt
   if (metadata.internationalText) {
-    Object.keys(metadata.internationalText).forEach(function(keyword) {
+    Object.keys(metadata.internationalText).forEach(function (keyword) {
       const {
         languageTag,
         translatedKeyword,
@@ -427,7 +430,7 @@ export default function encode(metadata: Metadata) {
   }
 
   // Other Chunks
-  Object.keys(chunkPackers).forEach(function(chunkName) {
+  Object.keys(chunkPackers).forEach(function (chunkName) {
     const data = chunkPackers[chunkName]();
     if (data.length > 0 || chunkName === 'IEND') {
       addChunk(chunkName, data);
