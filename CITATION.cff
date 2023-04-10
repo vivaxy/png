@@ -1,8 +1,8 @@
 cff-version: 1.1.0
 message: "If you use this software, please cite it as below."
 authors:
-  - family-names: Joe
-    given-names: Johnson
+  - family-names: Xu
+    given-names: Ye
     orcid: https://doi.org/10.5281/zenodo.7813145
 title: vivaxy/png
 version: v1.3.0
