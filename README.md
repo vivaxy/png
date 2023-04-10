@@ -6,6 +6,7 @@
 [![MIT License][license-image]][license-url]
 [![Standard Version][standard-version-image]][standard-version-url]
 [![Codecov][codecov-image]][codecov-url]
+[![DOI](https://zenodo.org/badge/218462452.svg)](https://zenodo.org/badge/latestdoi/218462452)
 
 > 🖼A full-featured PNG decoder and encoder.
 
