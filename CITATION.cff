@@ -3,7 +3,7 @@ message: "If you use this software, please cite it as below."
 authors:
   - family-names: Joe
     given-names: Johnson
-    orcid: https://orcid.org/0000-0000-0000-0000
-title: vivaxy/png: For Zenodo
+    orcid: https://doi.org/10.5281/zenodo.7813145
+title: vivaxy/png
 version: v1.3.0
 date-released: 2023-04-10
